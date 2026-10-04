@@ -1,0 +1,289 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Oefeningen dag 1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;color:#1b1b1f;background:#f6f7f9;line-height:1.5}
+header{background:#1b1b1f;color:#fff;padding:22px 24px} header h1{margin:0;font-size:20px} header p{margin:4px 0 0;opacity:.8;font-size:14px}
+.wrap{max-width:980px;margin:0 auto;padding:22px 24px 60px}
+.card{background:#fff;border:1px solid #dcdfe4;border-radius:10px;padding:18px 20px;margin:0 0 18px}
+.card h2{margin:0 0 10px;font-size:17px} .card h3{margin:16px 0 6px;font-size:14px;color:#444}
+a{color:#2b6cb0} ul{margin:8px 0;padding-left:20px} li{margin:3px 0}
+.btn{display:inline-block;background:#2b6cb0;color:#fff;border:0;border-radius:7px;padding:9px 15px;cursor:pointer;
+     font:inherit;font-size:14px;text-decoration:none;margin:3px 6px 3px 0}
+.btn.ghost{background:#fff;color:#1b1b1f;border:1px solid #dcdfe4}
+pre{background:#f3f3f3;border:1px solid #e3e5e8;border-radius:7px;padding:12px 14px;overflow-x:auto;
+    font-family:Consolas,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;margin:8px 0}
+.steps{counter-reset:s;list-style:none;padding:0} .steps li{counter-increment:s;margin:10px 0 10px 34px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:-34px;top:0;width:24px;height:24px;border-radius:50%;
+    background:#2b6cb0;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center}
+.note{font-size:13px;color:#555} .file{font-family:Consolas,monospace;font-size:12.5px;color:#666}
+.head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #eee;background:#fafafa}
+.head h2{font-size:15px;margin:0;flex:1}
+.ex{background:#fff;border:1px solid #dcdfe4;border-radius:8px;margin:0 0 16px;overflow:hidden}
+.ex pre{margin:0;border:0;border-radius:0;background:#fff}
+nav.sub{font-size:13px;padding:10px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:10px 0 0}
+.tile{display:block;background:#fff;border:1px solid #dcdfe4;border-radius:12px;padding:22px 22px 20px;
+      text-decoration:none;color:#1b1b1f;transition:border-color .12s,box-shadow .12s}
+.tile:hover{border-color:#2b6cb0;box-shadow:0 2px 10px rgba(43,108,176,.14)}
+.tile h2{margin:0 0 6px;font-size:19px;color:#2b6cb0}
+.tile p{margin:0;font-size:14px;color:#555}
+.tile.quiet h2{color:#1b1b1f}
+.big{font-size:16px;padding:12px 20px}
+</style></head><body>
+<header><h1>Oefeningen dag 1</h1><p>Brightminds SQL-training</p></header>
+<div class="wrap"><div class="card">
+  <h2>Werkwijze</h2>
+  <ul>
+    <li>In het <a href="werkblad.html"><b>werkblad</b></a> kies je de oefening gewoon links in de lijst; hij opent
+        dan in een eigen tabblad. Deze pagina heb je dan niet nodig.</li>
+    <li>Werk je in sql-workbench.com? Klik dan hieronder op <b>Kopieer</b> en plak de oefening
+        <b>onder je vorige werk</b> (Ctrl+End, dan plakken). Werk in één tabblad en ververs niet.</li>
+    <li>Zet je cursor <b>in</b> één query en druk <b>Ctrl+Enter</b> (Mac: Cmd+Enter). Selecteer niet het hele bestand.</li>
+  </ul>
+</div>
+<nav class="sub"><a href="#d1_oefening_1">1. Let&#x27;s query!</a> &middot; <a href="#d1_oefening_2">2. Filteren en sorteren</a> &middot; <a href="#d1_oefening_3">3. Aggregeren en groeperen</a> &middot; <a href="#d1_oefening_4">4. Joins: de working set</a> &middot; <a href="#d1_oefening_5">5. Joins: Green-Tree</a> &middot; <a href="#d1_oefening_6">6. Formatting</a> &middot; <a href="#d1_oefening_7">7. SQL schrijven met een LLM: laten schrijven, zelf controleren</a> &middot; <a href="oefeningen-dag2.html">oefeningen dag 2</a></nav>
+<section class="ex" id="d1_oefening_1">
+  <div class="head"><h2>Let&#x27;s query!</h2><span class="file">d1_oefening_1.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_1', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_1">-- ==========================================================================
+-- d1_oefening_1 - Let&#x27;s query!
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Een regel die begint met -- is een comment: die wordt niet uitgevoerd. Zo staat de uitleg in elk
+-- oefenbestand, en zo zet je zelf een stuk query tijdelijk uit (Ctrl + / zet de -- aan en uit).
+--
+-- Opdracht 1a: links in het werkblad zie je de schema&#x27;s SalesLT, ecodrive en dbo met hun tabellen.
+--              Klap SalesLT open. Welke tabellen zie je? Klik op Customer: welke kolommen heeft die tabel?
+--
+-- Opdracht 1b: zet je cursor in de query hieronder en druk Ctrl+Enter (Mac: Cmd+Enter). Je ziet 100 rijen.
+--
+-- Opdracht 1c: haal de -- weg voor de regel met WHERE (cursor op die regel, Ctrl + /) en draai de query
+--              opnieuw. Hoeveel rijen blijven er over? Zet de -- daarna weer terug.
+--
+-- Opdracht 1d: schrijf een query die alleen de voornaam (FirstName) van alle klanten laat zien.
+--
+-- Opdracht 1e: hoeveel rijen heeft SalesLT.Customer? (tip: rechtsonder bij het resultaat staat het aantal rijen;
+--              of gebruik SELECT COUNT(*) ...)
+
+SELECT *
+FROM SalesLT.Customer
+-- WHERE FirstName = &#x27;Kerim&#x27;
+LIMIT 100;
+</pre></section><section class="ex" id="d1_oefening_2">
+  <div class="head"><h2>Filteren en sorteren</h2><span class="file">d1_oefening_2.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_2', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_2">-- ==========================================================================
+-- d1_oefening_2 - Filteren en sorteren
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- De WHERE clause bestaat uit één of meer vergelijkings-operatoren en logische operatoren (AND, OR, NOT).
+--
+-- De vergelijkings-operatoren zijn:
+--     Gelijk:            =
+--     Ongelijk:          &lt;&gt; of !=
+--     Bereik:            &gt;   &gt;=   &lt;   &lt;=   BETWEEN
+--     Lidmaatschap:      IN (&#x27;a&#x27;, &#x27;b&#x27;)
+--     Deel van tekst:    LIKE / NOT LIKE   (% = nul of meer tekens, _ = precies één teken)
+--
+-- Opdracht 2: vul de onderstaande query aan: alle ordernummers (SalesOrderNumber) met een totaalbedrag
+--             (TotalDue) tussen de 10 en 1000 dollar, oplopend gesorteerd op TotalDue.
+--
+-- Bonus: hetzelfde, maar dan alleen orders die verzonden zijn met &#x27;CARGO TRANSPORT 5&#x27; (kolom ShipMethod).
+
+SELECT SOH.SalesOrderNumber
+    , SOH.TotalDue
+FROM SalesLT.SalesOrderHeader AS SOH
+WHERE 1 = 1
+    -- AND ...
+;
+</pre></section><section class="ex" id="d1_oefening_3">
+  <div class="head"><h2>Aggregeren en groeperen</h2><span class="file">d1_oefening_3.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_3', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_3">-- ==========================================================================
+-- d1_oefening_3 - Aggregeren en groeperen
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- De meest gebruikte aggregatiefuncties:
+--
+--     COUNT(*)            telt alle rijen
+--     COUNT(kolom)        telt de rijen waar de kolom niet leeg (NULL) is
+--     SUM(kolom)          som
+--     AVG(kolom)          gemiddelde
+--     MIN(kolom)          kleinste waarde
+--     MAX(kolom)          grootste waarde
+--
+-- Opdracht 3: schrijf queries die de volgende vragen beantwoorden.
+--     1. Hoeveel klanten heeft dit bedrijf? (tabel SalesLT.Customer)
+--     2. Hoeveel unieke bedrijfsnamen (CompanyName) zitten er in de klantentabel? (tip: COUNT(DISTINCT ...))
+--     3. Wat zijn die unieke bedrijfsnamen? (tip: GROUP BY)
+--     4. Welke bedrijfsnamen komen vaker dan 1 keer voor, en hoe vaak? (tip: HAVING)
+--
+-- Bonus:
+--     5. Hoe duur is het duurste product (ListPrice in SalesLT.Product)?
+--     6. Wat is de gemiddelde prijs per kilo (ListPrice / Weight) van producten in productcategorie 18?
+--     7. Draai: SUMMARIZE SalesLT.Product;   Wat valt je op bij de kolom Weight?
+</pre></section><section class="ex" id="d1_oefening_4">
+  <div class="head"><h2>Joins: de working set</h2><span class="file">d1_oefening_4.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_4', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_4">-- ==========================================================================
+-- d1_oefening_4 - Joins: de working set
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Een JOIN combineert rijen van twee (of meer) tabellen op basis van een gerelateerde kolom.
+--
+-- Opdracht 4: verklaar het resultaat van de query onderaan met behulp van de &#x27;working set&#x27;:
+--     - loop voor elke rij in A alle rijen in B af;
+--     - is de ON-conditie waar, dan komt de gecombineerde rij in de working set;
+--     - bij een LEFT JOIN blijft elke rij uit A sowieso over, met lege (NULL) waardes uit B als niets matcht.
+-- Schrijf de working set eerst op papier uit en voer de query dan uit ter controle.
+--
+-- Draai eerst de twee queries met de brontabellen (cursor erin, Ctrl+Enter), schrijf de working set op papier,
+-- en draai daarna pas de derde query.
+
+SELECT * FROM dbo.A;
+
+SELECT * FROM dbo.B;
+
+SELECT A.City_name AS stad_uit_A
+    , B.City_name AS stad_uit_B
+    , B.Godzilla_attacks
+FROM dbo.A
+LEFT JOIN dbo.B ON (A.Country = &#x27;USA&#x27; AND B.Godzilla_attacks = 2) OR B.Godzilla_attacks = 13;
+</pre></section><section class="ex" id="d1_oefening_5">
+  <div class="head"><h2>Joins: Green-Tree</h2><span class="file">d1_oefening_5.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_5', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_5">-- ==========================================================================
+-- d1_oefening_5 - Joins: Green-Tree
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Het bedrijf Green-Tree heeft een campagne gedraaid met aanbiedingen voor online klanten.
+-- Als gevolg daarvan zijn sommige orders (winkelmandjes) omgezet in sales.
+--
+-- Opdracht 5: beantwoord de vragen van Green-Tree. De data staat in dbo.onlinecustomers, dbo.orders en dbo.sales.
+-- Voor elke vraag heb je alle drie de tabellen nodig. Tip: schrijf eerst de working set uit.
+--
+-- Business-vragen:
+--     - Welke klanten zijn vanuit een order overgegaan tot een sale? (hint: INNER JOIN)
+--     - Welke klanten hebben wel een order gehad, maar geen sale? (hint: LEFT JOIN en ... IS NULL)
+--
+-- Bonus:
+--     - Geef alle data van klanten, orders en sales in één tabel, ook de orders zonder klant en de sales zonder order
+--       (hint: FULL JOIN).
+
+SELECT * FROM dbo.onlinecustomers;
+SELECT * FROM dbo.orders;
+SELECT * FROM dbo.sales;
+</pre></section><section class="ex" id="d1_oefening_6">
+  <div class="head"><h2>Formatting</h2><span class="file">d1_oefening_6.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_6', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_6">-- ==========================================================================
+-- d1_oefening_6 - Formatting
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- De manier waarop je SQL schrijft bepaalt hoe snel jij (en je collega&#x27;s over drie maanden) de query nog begrijpen.
+--
+-- Opdracht 6: herschrijf onderstaande query volgens de formatteringsregels van de slide:
+--     keywords in HOOFDLETTERS · elke clause op een nieuwe regel · komma&#x27;s vóór de kolomnaam ·
+--     WHERE 1 = 1 gevolgd door AND-filters · inspringen · aliases voor tabellen en kolommen · een comment erboven.
+
+select c.customerName,customermail, ordertotal,s.
+salestotal from dbo.onlinecustomers as c
+inner join dbo.orders as o on c.customerid=
+o.customerid left joiN
+dbo.sales AS s ON o.orderId=s.orderId Where s.salesId is
+null
+</pre></section><section class="ex" id="d1_oefening_7">
+  <div class="head"><h2>SQL schrijven met een LLM: laten schrijven, zelf controleren</h2><span class="file">d1_oefening_7.sql</span>
+    <button class="btn" onclick="copyEl('pre-d1_oefening_7', this)">Kopieer</button></div>
+  <pre id="pre-d1_oefening_7">-- ==========================================================================
+-- d1_oefening_7 - SQL schrijven met een LLM: laten schrijven, zelf controleren
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Werkwijze (tweetallen, 12 minuten):
+--     1. Benoem samen de GRAIN van het antwoord: &quot;1 rij per ...&quot;.
+--     2. Persoon A: vul het prompt-sjabloon hieronder aan en stuur het naar een LLM (ChatGPT, Claude, Copilot, ...).
+--        Persoon B schrijft ONDERTUSSEN drie checks op:
+--           - hoeveel rijen verwacht je?
+--           - één bedrijf waarvan je het antwoord kunt narekenen
+--           - welke join kan rijen vermenigvuldigen?
+--     3. Plak de query hieronder, draai hem, draai je checks. Klopt het?
+--     4. Niet? Fix het zelf (of laat het model fixen, maar snap de fix).
+--     Geen LLM bij de hand? Persoon B schrijft de query zelf; persoon A speelt reviewer.
+--
+-- Vraag A: geef per bedrijf (CompanyName) het aantal orders en de totale orderwaarde (TotalDue).
+--          1 rij per bedrijf. Sorteer op orderwaarde aflopend.
+--
+-- Vraag B: welke bedrijven hebben een product van productmodel &#x27;Racing Socks&#x27; besteld? 1 rij per bedrijf.
+--
+-- ---------------------------------------------------------------------------
+-- PROMPT-SJABLOON (kopieer, vul de vraag in)
+-- ---------------------------------------------------------------------------
+-- Je bent een data-analist. Dialect: DuckDB (Postgres-achtig: LIMIT, COALESCE, length, date_diff;
+-- géén TOP, ISNULL, GETDATE of [haken]).
+--
+-- Schema (PK = primary key, FK = foreign key):
+--   SalesLT.Customer(CustomerID PK, CompanyName, FirstName, LastName, EmailAddress)
+--   SalesLT.SalesOrderHeader(SalesOrderID PK, CustomerID FK-&gt;Customer, OrderDate, SubTotal, TaxAmt, Freight, TotalDue)
+--   SalesLT.SalesOrderDetail(SalesOrderDetailID PK, SalesOrderID FK-&gt;SalesOrderHeader, ProductID FK-&gt;Product,
+--                            OrderQty, UnitPrice, UnitPriceDiscount, LineTotal)
+--   SalesLT.Product(ProductID PK, Name, ProductModelID FK-&gt;ProductModel, ListPrice, StandardCost)
+--   SalesLT.ProductModel(ProductModelID PK, Name)
+--
+-- Vraag: [VRAAG A of B]. Grain: 1 rij per [...].
+-- Stijl: keywords in hoofdletters, komma&#x27;s vóór de kolomnaam, elke clause op een nieuwe regel,
+-- aliases voor tabellen en berekende kolommen, WHERE 1=1 gevolgd door AND-filters.
+-- Noem je aannames expliciet. Geef daarna een aparte controle-query voor het aantal rijen of het totaal.
+-- ---------------------------------------------------------------------------
+
+-- Query van het LLM:
+
+
+-- Eigen checks (schrijf ze op VOORDAT je het antwoord ziet):
+-- check 1: verwacht aantal rijen
+-- check 2: één bedrijf narekenen
+-- check 3: fan-out-test (rijen tellen vóór en ná de join)
+</pre></section></div><script>
+function copyEl(id, btn){const t=document.getElementById(id).innerText;
+navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Gekopieerd!';setTimeout(()=>btn.textContent=o,1500);});}
+</script></body></html>

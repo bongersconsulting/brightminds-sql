@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Brightminds SQL-werkblad</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<style>
+  :root{--bg:#f6f7f9;--ink:#1b1b1f;--line:#dcdfe4;--accent:#2b6cb0;--ok:#1a7f4b;--err:#b3261e;--side:#fbfcfd}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column}
+  header{background:#1b1b1f;color:#fff;padding:9px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header h1{font-size:15px;margin:0;font-weight:600}
+  header .sub{font-size:12.5px;opacity:.72}
+  .status{margin-left:auto;font-size:13px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c9a227;margin-right:6px}
+  .dot.ok{background:#39d98a}.dot.err{background:#ff6b6b}
+  .bar{background:#fff;border-bottom:1px solid var(--line);padding:7px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;font-size:13px;background:var(--accent);color:#fff;border:0;border-radius:6px;padding:7px 13px;cursor:pointer}
+  button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  button:disabled{opacity:.5;cursor:default}
+  .hintbar{font-size:12.5px;color:#555;margin-left:auto}
+  main{flex:1;display:flex;min-height:0}
+  aside{width:270px;background:var(--side);border-right:1px solid var(--line);flex-shrink:0;display:flex;flex-direction:column;min-height:0}
+  .asidescroll{overflow:auto;flex:1;min-height:0}
+  aside h2{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:14px 14px 6px}
+  .ex{display:block;width:100%;text-align:left;background:none;border:0;border-radius:0;color:var(--ink);
+      padding:5px 14px;font-size:13px;cursor:pointer}
+  .ex:hover{background:#eef2f7;color:var(--accent)}
+  details{margin:0 8px 2px}
+  details summary{cursor:pointer;font-size:13px;padding:3px 6px;border-radius:5px;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"\25B8 ";color:#888}
+  details[open] summary::before{content:"\25BE "}
+  details summary:hover{background:#eef2f7}
+  .schema{font-weight:600;color:#444;font-size:12px;margin:10px 8px 2px;padding:0 6px}
+  .cols{font-family:Consolas,Menlo,monospace;font-size:11.5px;color:#555;padding:2px 6px 6px 22px;line-height:1.55}
+  .cols span{cursor:pointer}.cols span:hover{color:var(--accent)}
+  .pane{flex:1;display:flex;flex-direction:column;min-width:0}
+
+  /* ---- tabbladen ---- */
+  .tabs{display:flex;align-items:stretch;gap:0;background:#eef0f3;border-bottom:1px solid var(--line);overflow-x:auto}
+  .tab{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;font-size:12.5px;cursor:pointer;
+       border-right:1px solid var(--line);background:#eef0f3;color:#444;white-space:nowrap;max-width:230px}
+  .tab.on{background:#fff;color:var(--ink);font-weight:600}
+  .tab .tname{overflow:hidden;text-overflow:ellipsis}
+  .tab .x{background:none;border:0;color:#999;font-size:14px;line-height:1;padding:1px 4px;border-radius:4px;cursor:pointer}
+  .tab .x:hover{background:#dde1e6;color:var(--err)}
+  .addtab{background:none;border:0;color:#555;font-size:17px;line-height:1;padding:4px 12px;cursor:pointer}
+  .addtab:hover{color:var(--accent);background:#e3e7ec}
+
+  .editorwrap{min-height:90px;display:flex;flex-direction:column;background:#fff}
+  .CodeMirror{height:100%;font-family:Consolas,Menlo,monospace;font-size:13.5px}
+  #fallback{flex:1;border:0;padding:12px 14px;font-family:Consolas,Menlo,monospace;font-size:13.5px;resize:none;outline:none}
+
+  /* ---- kleuren zoals in een SQL-editor ---- */
+  .cm-s-default .cm-keyword{color:#0b31d6;font-weight:600}
+  .cm-s-default .cm-atom{color:#0b31d6}
+  .cm-s-default .cm-type{color:#0b31d6}
+  .cm-s-default .cm-builtin{color:#0f766e}
+  .cm-s-default .cm-string,.cm-s-default .cm-string-2{color:#b3261e}
+  .cm-s-default .cm-number{color:#0a7d46}
+  .cm-s-default .cm-comment{color:#6a8759;font-style:italic}
+  .cm-s-default .cm-variable,.cm-s-default .cm-variable-2,.cm-s-default .cm-variable-3,
+  .cm-s-default .cm-property,.cm-s-default .cm-operator,.cm-s-default .cm-punctuation{color:#1b1b1f}
+  .cm-s-default .cm-bracket{color:#555}
+  .CodeMirror-selected{background:#d7e6f7 !important}
+
+  /* ---- sleepbare scheiding ---- */
+  .splitter{height:7px;background:#eef0f3;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+            cursor:row-resize;flex:none;position:relative}
+  .splitter::after{content:"";position:absolute;left:50%;top:2px;width:46px;height:3px;margin-left:-23px;
+                   border-radius:2px;background:#c3c8cf}
+  .splitter:hover::after{background:var(--accent)}
+  body.dragging{user-select:none;cursor:row-resize}
+
+  #out{flex:1;overflow:auto;background:#fff;min-height:80px}
+  #msg{padding:11px 16px;font-size:13px}
+  #msg.error{color:var(--err);font-family:Consolas,monospace;white-space:pre-wrap}
+  #msg.okmsg{color:var(--ok)}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{border-bottom:1px solid #eceef1;padding:4px 10px;text-align:left;white-space:nowrap}
+  th{background:#fafbfc;position:sticky;top:0;font-weight:600}
+  td.null{color:#aaa;font-style:italic}
+  .meta{font-size:12.5px;color:#555;padding:7px 16px;border-bottom:1px solid #f0f1f3}
+  a{color:var(--accent)}
+
+  /* ---- bestand hierheen slepen ---- */
+  #drop[hidden]{display:none}
+  #drop{position:fixed;inset:0;background:rgba(27,27,31,.35);display:flex;align-items:center;justify-content:center;z-index:60}
+  .dropbox{background:#fff;border:3px dashed var(--accent);border-radius:14px;padding:30px 44px;text-align:center;
+           display:flex;flex-direction:column;gap:7px}
+  .dropbox b{font-size:17px}
+  .dropbox span{font-size:13px;color:#555}
+
+  /* ---- venster voor datamodel / uitvoeringsplan ---- */
+  #modal[hidden]{display:none}
+  #modal{position:fixed;inset:0;background:rgba(20,22,26,.55);display:flex;align-items:center;justify-content:center;z-index:50}
+  .mbox{background:#fff;border-radius:10px;width:min(1180px,94vw);height:min(840px,92vh);display:flex;flex-direction:column;overflow:hidden}
+  .mhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .mhead h3{margin:0;font-size:15px;flex:1}
+  .mhead select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .mmain{flex:1;display:flex;min-height:0}
+  .mbody{flex:1;overflow:hidden;position:relative;background:#fff}
+  .mcanvas{position:absolute;inset:0;overflow:hidden;cursor:grab}
+  .mcanvas.grabbing{cursor:grabbing}
+  .mzoom{position:absolute;transform-origin:0 0;padding:0}
+  .mzoom svg{display:block}
+  .mside[hidden]{display:none}
+  .mside{width:300px;border-left:1px solid var(--line);overflow:auto;padding:12px 14px;font-size:12.5px;background:#fbfcfd}
+  .mside h4{margin:0 0 6px;font-size:13px}
+  .mside dl{margin:0;font-family:Consolas,Menlo,monospace;font-size:11.5px}
+  .mside dt{color:#666;margin-top:7px}
+  .mside dd{margin:1px 0 0;white-space:pre-wrap;word-break:break-word}
+  .mnote{font-size:12px;color:#666;padding:7px 14px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Brightminds SQL-werkblad</h1><span class="sub" id="dagtxt"></span>
+  <span class="status"><span class="dot" id="dot"></span><span id="statustxt">database laden&hellip;</span></span>
+</header>
+
+<div class="bar">
+  <button id="run" disabled>&#9654; Uitvoeren &nbsp;Ctrl+Enter</button>
+  <button class="ghost" id="csv" disabled title="Het hele resultaat opslaan als CSV (puntkomma, UTF-8)">Resultaat &rarr; CSV</button>
+  <button class="ghost" id="reload">Database opnieuw laden</button>
+  <button class="ghost" id="clear">Werkblad leegmaken</button>
+  <span class="hintbar">Cursor in een query en Ctrl+Enter &middot; Ctrl+/ zet een regel uit</span>
+</div>
+
+<main>
+  <aside>
+    <div class="asidescroll">
+      <h2>Oefeningen</h2>
+      <div id="exlist"><div class="cols">laden&hellip;</div></div>
+      <h2>Tabellen</h2>
+      <div id="schema"><div class="cols">laden&hellip;</div></div>
+    </div>
+  </aside>
+  <div class="pane">
+    <div class="tabs" id="tabs"></div>
+    <div class="editorwrap" id="editorwrap"><textarea id="fallback" spellcheck="false"></textarea></div>
+    <div class="splitter" id="splitter" title="Sleep om de hoogte aan te passen"></div>
+    <div id="out"><div id="msg">De database wordt geladen (12 MB). Een momentje.</div></div>
+  </div>
+</main>
+
+<div id="drop" hidden><div class="dropbox">
+  <b>Laat het bestand los</b>
+  <span>.sql en .txt openen in een nieuw tabblad &middot; .csv, .json en .parquet worden als tabel geladen</span>
+</div></div>
+
+<div id="modal" hidden>
+  <div class="mbox">
+    <div class="mhead">
+      <h3 id="mtitle"></h3>
+      <button class="ghost" id="mzoomout">&minus;</button>
+      <button class="ghost" id="mzoomin">+</button>
+      <button class="ghost" id="mfit">Passend</button>
+      <button class="ghost" id="mcopy">Mermaid-code kopi&euml;ren</button>
+      <button id="mclose">Sluiten</button>
+    </div>
+    <div class="mmain">
+      <div class="mbody"><div class="mcanvas" id="mcanvas"><div class="mzoom" id="mzoom"></div></div></div>
+      <div class="mside" id="mside"></div>
+    </div>
+    <div class="mnote" id="mnote"></div>
+  </div>
+</div>
+
+<script id="exdata" type="application/json">{
+ "items": [
+  {
+   "id": "d1_oefening_1",
+   "day": 1,
+   "title": "Let's query!",
+   "sql": "-- ==========================================================================\n-- d1_oefening_1 - Let's query!\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Een regel die begint met -- is een comment: die wordt niet uitgevoerd. Zo staat de uitleg in elk\n-- oefenbestand, en zo zet je zelf een stuk query tijdelijk uit (Ctrl + / zet de -- aan en uit).\n--\n-- Opdracht 1a: links in het werkblad zie je de schema's SalesLT, ecodrive en dbo met hun tabellen.\n--              Klap SalesLT open. Welke tabellen zie je? Klik op Customer: welke kolommen heeft die tabel?\n--\n-- Opdracht 1b: zet je cursor in de query hieronder en druk Ctrl+Enter (Mac: Cmd+Enter). Je ziet 100 rijen.\n--\n-- Opdracht 1c: haal de -- weg voor de regel met WHERE (cursor op die regel, Ctrl + /) en draai de query\n--              opnieuw. Hoeveel rijen blijven er over? Zet de -- daarna weer terug.\n--\n-- Opdracht 1d: schrijf een query die alleen de voornaam (FirstName) van alle klanten laat zien.\n--\n-- Opdracht 1e: hoeveel rijen heeft SalesLT.Customer? (tip: rechtsonder bij het resultaat staat het aantal rijen;\n--              of gebruik SELECT COUNT(*) ...)\n\nSELECT *\nFROM SalesLT.Customer\n-- WHERE FirstName = 'Kerim'\nLIMIT 100;\n"
+  },
+  {
+   "id": "d1_oefening_2",
+   "day": 1,
+   "title": "Filteren en sorteren",
+   "sql": "-- ==========================================================================\n-- d1_oefening_2 - Filteren en sorteren\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- De WHERE clause bestaat uit één of meer vergelijkings-operatoren en logische operatoren (AND, OR, NOT).\n--\n-- De vergelijkings-operatoren zijn:\n--     Gelijk:            =\n--     Ongelijk:          <> of !=\n--     Bereik:            >   >=   <   <=   BETWEEN\n--     Lidmaatschap:      IN ('a', 'b')\n--     Deel van tekst:    LIKE / NOT LIKE   (% = nul of meer tekens, _ = precies één teken)\n--\n-- Opdracht 2: vul de onderstaande query aan: alle ordernummers (SalesOrderNumber) met een totaalbedrag\n--             (TotalDue) tussen de 10 en 1000 dollar, oplopend gesorteerd op TotalDue.\n--\n-- Bonus: hetzelfde, maar dan alleen orders die verzonden zijn met 'CARGO TRANSPORT 5' (kolom ShipMethod).\n\nSELECT SOH.SalesOrderNumber\n    , SOH.TotalDue\nFROM SalesLT.SalesOrderHeader AS SOH\nWHERE 1 = 1\n    -- AND ...\n;\n"
+  },
+  {
+   "id": "d1_oefening_3",
+   "day": 1,
+   "title": "Aggregeren en groeperen",
+   "sql": "-- ==========================================================================\n-- d1_oefening_3 - Aggregeren en groeperen\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- De meest gebruikte aggregatiefuncties:\n--\n--     COUNT(*)            telt alle rijen\n--     COUNT(kolom)        telt de rijen waar de kolom niet leeg (NULL) is\n--     SUM(kolom)          som\n--     AVG(kolom)          gemiddelde\n--     MIN(kolom)          kleinste waarde\n--     MAX(kolom)          grootste waarde\n--\n-- Opdracht 3: schrijf queries die de volgende vragen beantwoorden.\n--     1. Hoeveel klanten heeft dit bedrijf? (tabel SalesLT.Customer)\n--     2. Hoeveel unieke bedrijfsnamen (CompanyName) zitten er in de klantentabel? (tip: COUNT(DISTINCT ...))\n--     3. Wat zijn die unieke bedrijfsnamen? (tip: GROUP BY)\n--     4. Welke bedrijfsnamen komen vaker dan 1 keer voor, en hoe vaak? (tip: HAVING)\n--\n-- Bonus:\n--     5. Hoe duur is het duurste product (ListPrice in SalesLT.Product)?\n--     6. Wat is de gemiddelde prijs per kilo (ListPrice / Weight) van producten in productcategorie 18?\n--     7. Draai: SUMMARIZE SalesLT.Product;   Wat valt je op bij de kolom Weight?\n"
+  },
+  {
+   "id": "d1_oefening_4",
+   "day": 1,
+   "title": "Joins: de working set",
+   "sql": "-- ==========================================================================\n-- d1_oefening_4 - Joins: de working set\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Een JOIN combineert rijen van twee (of meer) tabellen op basis van een gerelateerde kolom.\n--\n-- Opdracht 4: verklaar het resultaat van de query onderaan met behulp van de 'working set':\n--     - loop voor elke rij in A alle rijen in B af;\n--     - is de ON-conditie waar, dan komt de gecombineerde rij in de working set;\n--     - bij een LEFT JOIN blijft elke rij uit A sowieso over, met lege (NULL) waardes uit B als niets matcht.\n-- Schrijf de working set eerst op papier uit en voer de query dan uit ter controle.\n--\n-- Draai eerst de twee queries met de brontabellen (cursor erin, Ctrl+Enter), schrijf de working set op papier,\n-- en draai daarna pas de derde query.\n\nSELECT * FROM dbo.A;\n\nSELECT * FROM dbo.B;\n\nSELECT A.City_name AS stad_uit_A\n    , B.City_name AS stad_uit_B\n    , B.Godzilla_attacks\nFROM dbo.A\nLEFT JOIN dbo.B ON (A.Country = 'USA' AND B.Godzilla_attacks = 2) OR B.Godzilla_attacks = 13;\n"
+  },
+  {
+   "id": "d1_oefening_5",
+   "day": 1,
+   "title": "Joins: Green-Tree",
+   "sql": "-- ==========================================================================\n-- d1_oefening_5 - Joins: Green-Tree\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Het bedrijf Green-Tree heeft een campagne gedraaid met aanbiedingen voor online klanten.\n-- Als gevolg daarvan zijn sommige orders (winkelmandjes) omgezet in sales.\n--\n-- Opdracht 5: beantwoord de vragen van Green-Tree. De data staat in dbo.onlinecustomers, dbo.orders en dbo.sales.\n-- Voor elke vraag heb je alle drie de tabellen nodig. Tip: schrijf eerst de working set uit.\n--\n-- Business-vragen:\n--     - Welke klanten zijn vanuit een order overgegaan tot een sale? (hint: INNER JOIN)\n--     - Welke klanten hebben wel een order gehad, maar geen sale? (hint: LEFT JOIN en ... IS NULL)\n--\n-- Bonus:\n--     - Geef alle data van klanten, orders en sales in één tabel, ook de orders zonder klant en de sales zonder order\n--       (hint: FULL JOIN).\n\nSELECT * FROM dbo.onlinecustomers;\nSELECT * FROM dbo.orders;\nSELECT * FROM dbo.sales;\n"
+  },
+  {
+   "id": "d1_oefening_6",
+   "day": 1,
+   "title": "Formatting",
+   "sql": "-- ==========================================================================\n-- d1_oefening_6 - Formatting\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- De manier waarop je SQL schrijft bepaalt hoe snel jij (en je collega's over drie maanden) de query nog begrijpen.\n--\n-- Opdracht 6: herschrijf onderstaande query volgens de formatteringsregels van de slide:\n--     keywords in HOOFDLETTERS · elke clause op een nieuwe regel · komma's vóór de kolomnaam ·\n--     WHERE 1 = 1 gevolgd door AND-filters · inspringen · aliases voor tabellen en kolommen · een comment erboven.\n\nselect c.customerName,customermail, ordertotal,s.\nsalestotal from dbo.onlinecustomers as c\ninner join dbo.orders as o on c.customerid=\no.customerid left joiN\ndbo.sales AS s ON o.orderId=s.orderId Where s.salesId is\nnull\n"
+  },
+  {
+   "id": "d1_oefening_7",
+   "day": 1,
+   "title": "SQL schrijven met een LLM: laten schrijven, zelf controleren",
+   "sql": "-- ==========================================================================\n-- d1_oefening_7 - SQL schrijven met een LLM: laten schrijven, zelf controleren\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Werkwijze (tweetallen, 12 minuten):\n--     1. Benoem samen de GRAIN van het antwoord: \"1 rij per ...\".\n--     2. Persoon A: vul het prompt-sjabloon hieronder aan en stuur het naar een LLM (ChatGPT, Claude, Copilot, ...).\n--        Persoon B schrijft ONDERTUSSEN drie checks op:\n--           - hoeveel rijen verwacht je?\n--           - één bedrijf waarvan je het antwoord kunt narekenen\n--           - welke join kan rijen vermenigvuldigen?\n--     3. Plak de query hieronder, draai hem, draai je checks. Klopt het?\n--     4. Niet? Fix het zelf (of laat het model fixen, maar snap de fix).\n--     Geen LLM bij de hand? Persoon B schrijft de query zelf; persoon A speelt reviewer.\n--\n-- Vraag A: geef per bedrijf (CompanyName) het aantal orders en de totale orderwaarde (TotalDue).\n--          1 rij per bedrijf. Sorteer op orderwaarde aflopend.\n--\n-- Vraag B: welke bedrijven hebben een product van productmodel 'Racing Socks' besteld? 1 rij per bedrijf.\n--\n-- ---------------------------------------------------------------------------\n-- PROMPT-SJABLOON (kopieer, vul de vraag in)\n-- ---------------------------------------------------------------------------\n-- Je bent een data-analist. Dialect: DuckDB (Postgres-achtig: LIMIT, COALESCE, length, date_diff;\n-- géén TOP, ISNULL, GETDATE of [haken]).\n--\n-- Schema (PK = primary key, FK = foreign key):\n--   SalesLT.Customer(CustomerID PK, CompanyName, FirstName, LastName, EmailAddress)\n--   SalesLT.SalesOrderHeader(SalesOrderID PK, CustomerID FK->Customer, OrderDate, SubTotal, TaxAmt, Freight, TotalDue)\n--   SalesLT.SalesOrderDetail(SalesOrderDetailID PK, SalesOrderID FK->SalesOrderHeader, ProductID FK->Product,\n--                            OrderQty, UnitPrice, UnitPriceDiscount, LineTotal)\n--   SalesLT.Product(ProductID PK, Name, ProductModelID FK->ProductModel, ListPrice, StandardCost)\n--   SalesLT.ProductModel(ProductModelID PK, Name)\n--\n-- Vraag: [VRAAG A of B]. Grain: 1 rij per [...].\n-- Stijl: keywords in hoofdletters, komma's vóór de kolomnaam, elke clause op een nieuwe regel,\n-- aliases voor tabellen en berekende kolommen, WHERE 1=1 gevolgd door AND-filters.\n-- Noem je aannames expliciet. Geef daarna een aparte controle-query voor het aantal rijen of het totaal.\n-- ---------------------------------------------------------------------------\n\n-- Query van het LLM:\n\n\n-- Eigen checks (schrijf ze op VOORDAT je het antwoord ziet):\n-- check 1: verwacht aantal rijen\n-- check 2: één bedrijf narekenen\n-- check 3: fan-out-test (rijen tellen vóór en ná de join)\n"
+  },
+  {
+   "id": "d2_oefening_1",
+   "day": 2,
+   "title": "Window functions",
+   "sql": "-- ==========================================================================\n-- d2_oefening_1 - Window functions\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- In deze oefening ga je oefenen met window functions.\n-- Je maakt zelf een tabel aan. Die komt in dezelfde database als SalesLT en ecodrive, in het geheugen van je browser.\n-- Ververs je de pagina, dan is de tabel weg: de CREATE TABLE hieronder opnieuw uitvoeren. Je tekst in het\n-- werkblad blijft wel bewaard.\n--\n-- Opdracht 1a: maak de tabel student_score aan met de query hieronder.\n--\n-- Opdracht 1b: schrijf een SELECT query met alle kolommen plus een kolom maximum_score en een kolom minimum_score\n--              met de hoogste en laagste score over alle rijen (tip: gebruik alleen OVER (), geen PARTITION BY).\n--\n-- Opdracht 1c: schrijf een SELECT query met een kolom dep_maximum_score en dep_average_score:\n--              de hoogste en de gemiddelde score per departement (tip: OVER (PARTITION BY ...)).\n--\n-- Opdracht 1d: schrijf een SELECT query met een kolom score_rank die de studenten rangschikt op score,\n--              per departement (tip: RANK() OVER (PARTITION BY ... ORDER BY ...)).\n--\n-- Opdracht 1e: gebruik DENSE_RANK in plaats van RANK in de query van 1d. Wat is het verschil in de output?\n--\n-- Bonus:       geef alleen de nummer 1 van elk departement (tip: QUALIFY, of een CTE met WHERE).\n\nCREATE OR REPLACE TABLE student_score (\n    student_id INTEGER PRIMARY KEY\n    , student_name VARCHAR\n    , dep_name VARCHAR\n    , score INTEGER\n);\n\nINSERT INTO student_score (student_id, student_name, dep_name, score)\nVALUES (11, 'Ibrahim', 'Computer Science', 80)\n    , (7, 'Taiwo', 'Microbiology', 76)\n    , (9, 'Nurain', 'Biochemistry', 80)\n    , (8, 'Joel', 'Computer Science', 90)\n    , (10, 'Mustapha', 'Industrial Chemistry', 78)\n    , (5, 'Muritadoh', 'Biochemistry', 85)\n    , (2, 'Yusuf', 'Biochemistry', 70)\n    , (3, 'Habeebah', 'Microbiology', 80)\n    , (1, 'Tomiwa', 'Microbiology', 65)\n    , (4, 'Gbadebo', 'Computer Science', 80)\n    , (12, 'Tolu', 'Computer Science', 67);\n\nSELECT *\nFROM student_score\nORDER BY score;\n"
+  },
+  {
+   "id": "d2_oefening_2",
+   "day": 2,
+   "title": "Running total en moving average",
+   "sql": "-- ==========================================================================\n-- d2_oefening_2 - Running total en moving average\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- In deze oefening gebruik je window functions voor een running total (lopend totaal) en een moving average.\n--\n-- Opdracht 2a: maak de tabel bikeshare aan met de query hieronder.\n--\n-- Opdracht 2b: schrijf een SELECT query met de kolommen start_time, bike_id_nr en duration_seconds\n--              en een kolom running_total: de cumulatieve som van duration_seconds, in volgorde van start_time.\n--              Kijk goed naar de output. Klopt elke rij? (Tip: er zijn ritten met precies dezelfde start_time.)\n--\n-- Opdracht 2c: schrijf een SELECT query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van de\n--              3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).\n--\n-- Bonus:       wat gebeurt er als je in 2b alleen ORDER BY start_time gebruikt, zonder ROWS BETWEEN ...? Waarom?\n\nCREATE OR REPLACE TABLE bikeshare (\n    duration_seconds INTEGER\n    , start_time TIMESTAMP\n    , end_time TIMESTAMP\n    , start_terminal VARCHAR\n    , end_terminal VARCHAR\n    , bike_id_nr INTEGER\n    , member_type VARCHAR\n);\n\nINSERT INTO bikeshare\nVALUES (605,  '2024-01-05 12:30:00', '2024-01-05 12:40:05', 'DIEMEN', 'AMS', 3025, 'registered')\n    , (55,   '2024-01-05 12:30:10', '2024-01-05 12:31:05', 'DIEMEN', 'AMS', 1025, 'registered')\n    , (65,   '2024-01-05 12:30:10', '2024-01-05 12:31:15', 'DIEMEN', 'AMS', 2025, 'casual')\n    , (7255, '2024-01-06 16:30:10', '2024-01-06 18:31:05', 'DIEMEN', 'AMS', 1025, 'registered')\n    , (7265, '2024-01-06 16:30:10', '2024-01-06 18:31:15', 'DIEMEN', 'AMS', 2025, 'casual')\n    , (55,   '2024-01-07 10:30:10', '2024-01-07 10:31:05', 'AMS',    'AMS', 1025, 'registered')\n    , (65,   '2024-01-07 10:30:10', '2024-01-07 10:31:15', 'AMS',    'AMS', 2025, 'casual');\n\nSELECT *\nFROM bikeshare\nORDER BY start_time\n    , bike_id_nr;\n"
+  },
+  {
+   "id": "d2_oefening_3",
+   "day": 2,
+   "title": "CASE WHEN en datatypes",
+   "sql": "-- ==========================================================================\n-- d2_oefening_3 - CASE WHEN en datatypes\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Stel je hebt een tabel TBL met een kolom NMBR met de waardes:\n-- (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1)\n--\n-- Opdracht 3a: maak de tabel TBL aan met de query hieronder, precies zoals hij er staat.\n--\n-- Opdracht 3b: schrijf een SELECT query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).\n--              Je krijgt een foutmelding. Lees hem goed: waarom weigert DuckDB dit?\n--              Welk datatype had de kolom moeten hebben? Pas de tabel aan (ALTER TABLE ... ALTER COLUMN ... TYPE ...)\n--              en probeer opnieuw.\n--\n-- Bonus:       herschrijf de query uit 3b met de functie IF(conditie, waarde_als_waar, waarde_als_onwaar).\n\nCREATE OR REPLACE TABLE TBL (\n    NMBR VARCHAR          -- bewust het verkeerde datatype\n);\n\nINSERT INTO TBL (NMBR)\nVALUES (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1);\n\nSELECT *\nFROM TBL;\n"
+  },
+  {
+   "id": "d2_oefening_4",
+   "day": 2,
+   "title": "Strings",
+   "sql": "-- ==========================================================================\n-- d2_oefening_4 - Strings\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- In deze oefening ga je oefenen met string-functies (tekst).\n--     length(s)            lengte              lower(s) / upper(s)     kleine / hoofdletters\n--     left(s, n)           eerste n tekens     substring(s, start, n)  deel van een string (start telt vanaf 1)\n--     strpos(s, zoek)      positie van zoek in s (0 = niet gevonden)   concat(a, b, ...) of a || b   samenvoegen\n--     trim(s)              spaties weghalen    replace(s, oud, nieuw)  vervangen\n--\n-- Opdracht 4a: geef de eerste letter van de voornaam (FirstName) van alle klanten in SalesLT.Customer.\n--\n-- Opdracht 4b: geef de voorlaatste letter van de voornaam van alle klanten.\n--\n-- Opdracht 4c: geef de producten (SalesLT.Product) waarbij de kleur (Color) NIET in de productnaam (Name) voorkomt.\n--              Let op: Color kan leeg zijn. (Tip: strpos en COALESCE.)\n--\n-- Bonus:       geef de producten waarbij 'Road' voorkomt in de productnaam, in de naam van de productcategorie\n--              (SalesLT.ProductCategory) of in de naam van het productmodel (SalesLT.ProductModel).\n--              (Tip: concat en LIKE met %.)\n"
+  },
+  {
+   "id": "d2_oefening_5",
+   "day": 2,
+   "title": "Datum en tijd",
+   "sql": "-- ==========================================================================\n-- d2_oefening_5 - Datum en tijd\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- In deze oefening ga je oefenen met datumfuncties (tabel bikeshare uit oefening 2).\n--     date_diff('day', a, b)     verschil tussen a en b in dagen ('second', 'minute', 'month', 'year' kan ook)\n--     year(d) / month(d) / day(d)   onderdelen van een datum\n--     date_trunc('month', d)     afronden naar het begin van de maand\n--     current_date / now()       vandaag / nu\n--     strptime(tekst, formaat)   tekst naar datum, bijv. strptime('Jan 2024', '%b %Y')\n--\n-- Opdracht 5a: geef duration_seconds en daarnaast het verschil in seconden tussen start_time en end_time.\n--              Je berekende kolom hoort hetzelfde te zijn als duration_seconds.\n--\n-- Opdracht 5b: geef start_time en de kolommen jaar, maand en dag.\n--\n-- Opdracht 5c: maak de tabel ledger_months aan (hieronder) en sorteer de rijen in kalendervolgorde\n--              (tip: CASE WHEN op left(Month, 3), of strptime).\n--\n-- Bonus:       geef start_terminal en duration_seconds en een kolom difference: het verschil met de vorige rit\n--              (op duration_seconds gesorteerd), per start_terminal (tip: window functie LAG).\n\nCREATE OR REPLACE TABLE ledger_months (\n    EntryNo INTEGER\n    , Month VARCHAR\n    , Amount DECIMAL(10, 2)\n);\n\nINSERT INTO ledger_months\nVALUES (1, 'Jan 2024', 120.00)\n    , (2, 'Mrt 2024', 95.50)\n    , (3, 'Feb 2024', 210.10)\n    , (4, 'Apr 2024', 80.00)\n    , (5, 'Jun 2024', 133.30)\n    , (6, 'Mei 2024', 99.99);\n"
+  },
+  {
+   "id": "d2_oefening_6",
+   "day": 2,
+   "title": "Review drie LLM-queries",
+   "sql": "-- ==========================================================================\n-- d2_oefening_6 - Review drie LLM-queries\n-- ==========================================================================\n--\n-- WERKWIJZE\n--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).\n--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.\n--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,\n--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.\n--\n-- Drie queries die een LLM schreef. Per query (tweetallen, 15 minuten totaal):\n--     1. Wat was de vraag? Zeg hem in je eigen woorden, inclusief de grain (\"1 rij per ...\").\n--     2. Wat gaat er mis? Gebruik de vijf patronen:\n--          1 join fan-out · 2 aggregatie vóór/ná filter · 3 window-scoping · 4 datum & tijd · 5 dialect-mix\n--     3. Wat is de fix? Schrijf hem en controleer met een van de standaard checks.\n--     Je mag een LLM laten reviewen. Vraag daarna: vond het model zijn eigen fout?\n\n-------------------------------------------------------------------------\n-- Query 1 · prompt was: \"Geef per klant (CustomerID) het aantal orders, de totale orderwaarde (TotalDue)\n--                        en het aantal bestelde artikelen.\"\n-------------------------------------------------------------------------\nSELECT C.CustomerID\n    , C.CompanyName\n    , COUNT(SOH.SalesOrderID) AS aantal_orders\n    , SUM(SOH.TotalDue) AS totale_orderwaarde\n    , SUM(SOD.OrderQty) AS aantal_artikelen\nFROM SalesLT.Customer AS C\nINNER JOIN SalesLT.SalesOrderHeader AS SOH ON SOH.CustomerID = C.CustomerID\nINNER JOIN SalesLT.SalesOrderDetail AS SOD ON SOD.SalesOrderID = SOH.SalesOrderID\nGROUP BY C.CustomerID\n    , C.CompanyName\nORDER BY totale_orderwaarde DESC;\n\n-------------------------------------------------------------------------\n-- Query 2 · prompt was: \"Geef per orderregel het lopende totaal (running total) van de regelwaarde (LineTotal)\n--                        binnen de order, in volgorde van SalesOrderDetailID.\"\n-------------------------------------------------------------------------\nSELECT SOD.SalesOrderID\n    , SOD.SalesOrderDetailID\n    , SOD.LineTotal\n    , SUM(SOD.LineTotal) OVER (ORDER BY SOD.SalesOrderID) AS running_total\nFROM SalesLT.SalesOrderDetail AS SOD\nORDER BY SOD.SalesOrderID\n    , SOD.SalesOrderDetailID;\n\n-------------------------------------------------------------------------\n-- Query 3 · prompt was: \"Geef de 10 orders uit 2008 van bedrijven met een korte naam (minder dan 15 tekens),\n--                        met de bedrijfsnaam, de orderdatum en het aantal dagen tot verzending.\"\n-------------------------------------------------------------------------\nSELECT TOP 10 SOH.SalesOrderID\n    , C.CompanyName\n    , SOH.OrderDate\n    , DATEDIFF(day, SOH.OrderDate, ISNULL(SOH.ShipDate, GETDATE())) AS dagen_tot_verzending\nFROM SalesLT.SalesOrderHeader AS SOH\nINNER JOIN SalesLT.Customer AS C ON C.CustomerID = SOH.CustomerID\nWHERE SOH.OrderDate BETWEEN '2008-01-01' AND '2008-12-31'\n    AND LEN(C.CompanyName) < 15\nORDER BY SOH.OrderDate;\n"
+  }
+ ]
+}</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script type="module">
+const LOCAL = location.protocol === "file:";
+const DB_FILE = "files/brightminds_sql.duckdb";
+const DB_FALLBACK = "https://raw.githubusercontent.com/bongersconsulting/brightminds-sql/main/brightminds_sql.duckdb";
+const DUCK = "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.32.0";
+const MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+const KEY_BASE = "brightminds-werkblad-v2";
+const KEY_OLD = "brightminds-werkblad";
+const KEY = KEY_BASE + (new URLSearchParams(location.search).get("dag") === "2" ? "-dag2" : "");
+const WELCOME = `-- Welkom. De database is al geladen: je hoeft hier geen startregels te draaien.
+-- Zet je cursor in de query hieronder en druk Ctrl+Enter (Mac: Cmd+Enter).
+-- Links kies je een oefening; die opent in een eigen tabblad.
+
+SELECT C.CompanyName
+    , C.FirstName
+    , C.EmailAddress
+FROM SalesLT.Customer AS C
+LIMIT 10;
+`;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+let conn = null, cm = null, lastResult = null, lastMermaid = "";
+let duck = null, ddb = null;          // de duckdb-module en de database, nodig om bestanden te registreren
+
+/* ================================================================= tabbladen + opslag */
+let state = { tabs: [{ name: "Query 1", text: WELCOME }], active: 0, editorPx: 0 };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s && Array.isArray(s.tabs) && s.tabs.length) {
+        state = { tabs: s.tabs, active: Math.min(s.active || 0, s.tabs.length - 1), editorPx: s.editorPx || 0 };
+        return;
+      }
+    }
+    const old = localStorage.getItem(KEY_OLD);
+    if (old) state.tabs = [{ name: "Query 1", text: old }];
+  } catch (e) { /* zonder opslag werkt alles ook, je werk is dan niet bewaard */ }
+}
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    state.tabs[state.active].text = text();
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { }
+  }, 250);
+}
+function saveNow() { state.tabs[state.active].text = text(); try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { } }
+
+function renderTabs() {
+  const el = $("tabs"); el.innerHTML = "";
+  state.tabs.forEach((t, i) => {
+    const d = document.createElement("div");
+    d.className = "tab" + (i === state.active ? " on" : "");
+    d.innerHTML = `<span class="tname">${esc(t.name)}</span>`;
+    d.title = "Klik om te wisselen · dubbelklik om te hernoemen";
+    d.addEventListener("click", () => selectTab(i));
+    d.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      const n = prompt("Naam van dit tabblad:", t.name);
+      if (n && n.trim()) { t.name = n.trim(); saveNow(); renderTabs(); }
+    });
+    const x = document.createElement("button");
+    x.className = "x"; x.textContent = "×"; x.title = "Tabblad sluiten";
+    x.addEventListener("click", (e) => { e.stopPropagation(); closeTab(i); });
+    d.appendChild(x);
+    el.appendChild(d);
+  });
+  const add = document.createElement("button");
+  add.className = "addtab"; add.textContent = "+"; add.title = "Nieuw tabblad";
+  add.addEventListener("click", () => newTab());
+  el.appendChild(add);
+}
+function selectTab(i) {
+  if (i === state.active) return;
+  saveNow();
+  state.active = i;
+  setEditorText(state.tabs[i].text, true);
+  renderTabs(); saveNow(); focusEditor();
+}
+function newTab(name, sql) {
+  saveNow();
+  const used = state.tabs.map((t) => t.name);
+  let n = 1; while (used.includes("Query " + n)) n++;
+  state.tabs.push({ name: name || "Query " + n, text: sql !== undefined ? sql : "" });
+  state.active = state.tabs.length - 1;
+  setEditorText(state.tabs[state.active].text, true);
+  // cursor op de eerste echte query, zodat Ctrl+Enter meteen het goede statement pakt
+  if (cm && sql) {
+    const lines = sql.split("\n");
+    const i = lines.findIndex((l) => l.trim() && !l.trim().startsWith("--"));
+    if (i >= 0) { cm.setCursor(i, lines[i].length); cm.scrollIntoView({ line: i, ch: 0 }, 80); }
+  }
+  renderTabs(); saveNow(); focusEditor();
+}
+function closeTab(i) {
+  if (state.tabs.length === 1) { state.tabs[0] = { name: "Query 1", text: WELCOME }; state.active = 0; setEditorText(WELCOME, true); renderTabs(); saveNow(); return; }
+  if (state.tabs[i].text.trim() && !confirm(`Tabblad "${state.tabs[i].name}" sluiten? De tekst gaat weg.`)) return;
+  saveNow();
+  state.tabs.splice(i, 1);
+  if (state.active >= state.tabs.length) state.active = state.tabs.length - 1;
+  else if (i < state.active) state.active--;
+  setEditorText(state.tabs[state.active].text, true);
+  renderTabs(); saveNow();
+}
+
+/* ================================================================= editor */
+function initEditor() {
+  const start = state.tabs[state.active].text;
+  if (window.CodeMirror) {
+    cm = CodeMirror.fromTextArea($("fallback"), {
+      mode: "text/x-sql", lineNumbers: true, lineWrapping: true, indentUnit: 4,
+      extraKeys: {
+        "Ctrl-Enter": run, "Cmd-Enter": run,
+        "Ctrl-/": (c) => c.toggleComment(), "Cmd-/": (c) => c.toggleComment(),
+        "Shift-Ctrl-E": explainPlan, "Shift-Cmd-E": explainPlan,
+      },
+    });
+    cm.setValue(start);
+    cm.on("change", save);
+  } else {
+    $("fallback").value = start;
+    $("fallback").addEventListener("input", save);
+    $("fallback").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "E" || e.key === "e")) { e.preventDefault(); explainPlan(); }
+    });
+  }
+}
+const text = () => (cm ? cm.getValue() : $("fallback").value);
+const cursorIndex = () => (cm ? cm.indexFromPos(cm.getCursor()) : $("fallback").selectionStart);
+const selection = () => (cm ? cm.getSelection() : $("fallback").value.slice($("fallback").selectionStart, $("fallback").selectionEnd));
+function focusEditor() { if (cm) cm.focus(); else $("fallback").focus(); }
+function setEditorText(v, fresh) {
+  if (cm) {
+    if (fresh) cm.swapDoc(CodeMirror.Doc(v, "text/x-sql"));   // eigen undo-historie per tabblad
+    else cm.setValue(v);
+    cm.setCursor(cm.lineCount(), 0);
+  } else { $("fallback").value = v; }
+}
+
+/* ================================================================= statements splitsen */
+function splitStatements(sql) {
+  const out = []; let start = 0, i = 0, depth = 0;
+  while (i < sql.length) {
+    const c = sql[i], n = sql[i + 1];
+    if (depth > 0) {
+      if (c === "/" && n === "*") { depth++; i += 2; continue; }
+      if (c === "*" && n === "/") { depth--; i += 2; continue; }
+      i++; continue;
+    }
+    if (c === "-" && n === "-") { while (i < sql.length && sql[i] !== "\n") i++; continue; }
+    if (c === "/" && n === "*") { depth = 1; i += 2; continue; }
+    if (c === "'" || c === '"') {
+      const q = c; i++;
+      while (i < sql.length) { if (sql[i] === q) { if (sql[i + 1] === q) { i += 2; continue; } i++; break; } i++; }
+      continue;
+    }
+    if (c === ";") { out.push({ text: sql.slice(start, i), from: start, to: i }); i++; start = i; continue; }
+    i++;
+  }
+  if (sql.slice(start).trim()) out.push({ text: sql.slice(start), from: start, to: sql.length });
+  return out.filter((s) => s.text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ").trim().length > 0);
+}
+function currentStatement() {
+  const sel = selection();
+  if (sel.trim()) return sel;
+  const pos = cursorIndex(), stmts = splitStatements(text());
+  for (const s of stmts) if (pos >= s.from && pos <= s.to + 1) return s.text;
+  return stmts.length ? stmts[stmts.length - 1].text : "";
+}
+
+/* ================================================================= DuckDB */
+function setStatus(t, s) { $("statustxt").textContent = t; $("dot").className = "dot" + (s ? " " + s : ""); }
+function show(html, cls) {
+  const m = document.createElement("div"); m.id = "msg"; m.className = cls || ""; m.innerHTML = html;
+  $("out").innerHTML = ""; $("out").appendChild(m);
+}
+
+async function boot() {
+  try {
+    setStatus("DuckDB laden…");
+    let duckdb;
+    try { duckdb = await import(`${DUCK}/dist/duckdb-browser.mjs`); }
+    catch (e) { duckdb = await import(`${DUCK}/+esm`); }
+    const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
+    const workerUrl = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], { type: "text/javascript" }));
+    const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger("WARNING"), new Worker(workerUrl));
+    duck = duckdb; ddb = db;
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    URL.revokeObjectURL(workerUrl);
+
+    setStatus("database laden…");
+    // Lokaal geopend (file://) mag de browser geen bestanden naast de pagina ophalen: dan direct van GitHub.
+    let url = DB_FALLBACK;
+    if (!LOCAL) {
+      // absoluut maken: de DuckDB-worker draait vanuit een blob: en kan geen relatieve URL openen
+      const local = new URL(DB_FILE, location.href).href;
+      try { const r = await fetch(local, { method: "HEAD" }); if (r.ok) url = local; } catch (e) { }
+    }
+    await db.registerFileURL("bm.duckdb", url, duckdb.DuckDBDataProtocol.HTTP, false);
+    conn = await db.connect();
+    await conn.query("ATTACH 'bm.duckdb' AS bm (READ_ONLY)");
+    await conn.query("COPY FROM DATABASE bm TO memory");
+    await conn.query("DETACH bm");
+
+    await conn.query("SELECT COUNT(*) FROM SalesLT.Customer");   // controle dat de data er echt in zit
+    setStatus("klaar · database geladen", "ok");
+    $("run").disabled = false;
+    show("Database geladen. Zet je cursor in een query en druk <b>Ctrl+Enter</b>.");
+    refreshSchema();
+  } catch (e) {
+    setStatus("laden mislukt", "err");
+    show("De database kon niet geladen worden.\n\n" + (e && e.message ? e.message : e) +
+      "\n\nProbeer: pagina verversen · Chrome of Edge · een ander netwerk (telefoon-hotspot)." +
+      (LOCAL ? "\nJe hebt dit bestand lokaal geopend; de database komt dan rechtstreeks van GitHub. Zonder internet lukt dat niet." : "") +
+      "\nLukt het niet, gebruik dan sql-workbench.com met de startregels van de startpagina.", "error");
+  }
+}
+
+/* ================================================================= uitvoeren + CSV */
+function cell(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "bigint") return v.toString();
+  if (v instanceof Date) return v.toISOString().slice(0, 19).replace("T", " ");
+  return String(v);
+}
+function render(table, ms) {
+  const fields = table.schema.fields.map((f) => f.name);
+  const rows = table.toArray(), max = 1000;
+  lastResult = { fields, rows };
+  $("csv").disabled = rows.length === 0;
+  let html = `<div class="meta">${rows.length} rij(en)${rows.length > max ? `, eerste ${max} getoond` : ""} &middot; ${ms} ms</div>`;
+  html += `<table><thead><tr>${fields.map((f) => `<th>${esc(f)}</th>`).join("")}</tr></thead><tbody>`;
+  for (const row of rows.slice(0, max)) {
+    html += "<tr>" + fields.map((f) => {
+      const v = cell(row[f]);
+      return v === null ? '<td class="null">NULL</td>' : `<td>${esc(v)}</td>`;
+    }).join("") + "</tr>";
+  }
+  $("out").innerHTML = html + "</tbody></table>";
+}
+async function run() {
+  if (!conn) return;
+  const sql = currentStatement().trim();
+  if (!sql) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
+  $("run").disabled = true;
+  try {
+    const t0 = performance.now();
+    const res = await conn.query(sql);
+    const ms = Math.round(performance.now() - t0);
+    if (res.schema.fields.length === 0) { show(`Uitgevoerd in ${ms} ms.`, "okmsg"); lastResult = null; $("csv").disabled = true; }
+    else render(res, ms);
+    if (/\b(create|drop|alter|insert|delete|update|attach|detach)\b/i.test(sql)) refreshSchema();
+  } catch (e) { show(e && e.message ? e.message : String(e), "error"); }
+  finally { $("run").disabled = false; }
+}
+function exportCsv() {
+  if (!lastResult) return;
+  const S = ";";
+  const q = (v) => (v === null ? "" : /[";\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v);
+  const lines = [lastResult.fields.map(q).join(S)];
+  for (const row of lastResult.rows) lines.push(lastResult.fields.map((f) => q(cell(row[f]))).join(S));
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.tabs[state.active].name || "resultaat").replace(/[^\w\- ]+/g, "_") + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ================================================================= tabellen links */
+async function refreshSchema() {
+  if (!conn) return;
+  try {
+    const r = await conn.query(`
+      SELECT table_schema AS s, table_name AS t,
+             string_agg(column_name || '  ' || data_type, '|' ORDER BY ordinal_position) AS cols
+      FROM information_schema.columns
+      WHERE table_schema NOT IN ('information_schema','pg_catalog')
+      GROUP BY ALL ORDER BY 1, 2`);
+    const bySchema = new Map();
+    for (const row of r.toArray()) {
+      if (!bySchema.has(row.s)) bySchema.set(row.s, []);
+      bySchema.get(row.s).push({ t: row.t, cols: String(row.cols).split("|") });
+    }
+    const el = $("schema"); el.innerHTML = "";
+    for (const [schema, tables] of bySchema) {
+      const h = document.createElement("div"); h.className = "schema";
+      h.textContent = schema === "main" ? "eigen tabellen" : schema;
+      el.appendChild(h);
+      for (const tb of tables) {
+        const d = document.createElement("details");
+        const name = (schema === "main" ? "" : schema + ".") + tb.t;
+        d.innerHTML = `<summary>${esc(tb.t)}</summary><div class="cols">${tb.cols.map((c) => `<span>${esc(c)}</span>`).join("<br>")}</div>`;
+        d.querySelector("summary").addEventListener("dblclick", () => insertAtCursor(name));
+        d.querySelectorAll(".cols span").forEach((sp) =>
+          sp.addEventListener("click", () => insertAtCursor(sp.textContent.split("  ")[0])));
+        el.appendChild(d);
+      }
+    }
+  } catch (e) { /* schemalijst is bijzaak */ }
+}
+function insertAtCursor(s) {
+  if (cm) { cm.replaceSelection(s); cm.focus(); }
+  else { const t = $("fallback"); t.setRangeText(s, t.selectionStart, t.selectionEnd, "end"); t.focus(); }
+  save();
+}
+
+/* ================================================================= oefeningen links */
+const DAG = (() => { const d = new URLSearchParams(location.search).get("dag"); return d === "1" || d === "2" ? Number(d) : null; })();
+
+function initExercises() {
+  let data = null;
+  try { data = JSON.parse($("exdata").textContent); } catch (e) { }
+  const el = $("exlist");
+  if (!data || !data.items) { el.innerHTML = '<div class="cols">niet gevonden</div>'; return; }
+  const items = DAG ? data.items.filter((x) => x.day === DAG) : data.items;
+  if (DAG) $("dagtxt").textContent = DAG === 1 ? "dag 1 \u00b7 SQL Fundamentals" : "dag 2 \u00b7 SQL Advanced";
+  el.innerHTML = ""; let day = null;
+  for (const ex of items) {
+    if (!DAG && ex.day !== day) { day = ex.day; const h = document.createElement("div"); h.className = "schema"; h.textContent = "dag " + day; el.appendChild(h); }
+    const b = document.createElement("button");
+    const nr = ex.id.split("_").pop();
+    b.className = "ex"; b.textContent = `${nr}. ${ex.title}`;
+    b.title = "Opent de oefening in een eigen tabblad";
+    b.addEventListener("click", () => newTab(DAG ? `Oefening ${nr}` : `Oef ${ex.day}.${nr}`, ex.sql));
+    el.appendChild(b);
+  }
+}
+
+/* ================================================================= sleepbare scheiding */
+function initSplitter() {
+  const pane = document.querySelector(".pane"), wrap = $("editorwrap"), sp = $("splitter");
+  const apply = (px) => {
+    const min = 90, max = pane.clientHeight - $("tabs").offsetHeight - sp.offsetHeight - 80;
+    const v = Math.max(min, Math.min(px, max));
+    wrap.style.flex = "none"; wrap.style.height = v + "px";
+    state.editorPx = v;
+    if (cm) cm.refresh();
+  };
+  const startPx = state.editorPx || Math.round((pane.clientHeight - $("tabs").offsetHeight) * 0.52);
+  apply(startPx);
+  let dragging = false;
+  sp.addEventListener("mousedown", (e) => { dragging = true; document.body.classList.add("dragging"); e.preventDefault(); });
+  window.addEventListener("mousemove", (e) => { if (dragging) apply(e.clientY - wrap.getBoundingClientRect().top); });
+  window.addEventListener("mouseup", () => { if (dragging) { dragging = false; document.body.classList.remove("dragging"); saveNow(); } });
+  sp.addEventListener("dblclick", () => apply(Math.round((pane.clientHeight - $("tabs").offsetHeight) * 0.52)));
+  window.addEventListener("resize", () => apply(state.editorPx || 300));
+}
+
+/* ================================================================= venster + mermaid */
+let mermaidP = null;
+async function getMermaid() {
+  if (!mermaidP) mermaidP = import(MERMAID).then((m) => {
+    m.default.initialize({ startOnLoad: false, securityLevel: "loose", theme: "default",
+                           er: { useMaxWidth: false }, flowchart: { useMaxWidth: false, htmlLabels: true } });
+    return m.default;
+  });
+  return mermaidP;
+}
+let zoom = 1, panX = 0, panY = 0;
+function applyZoom() { $("mzoom").style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`; }
+function fitDiagram() {
+  const svg = $("mzoom").querySelector("svg"), c = $("mcanvas");
+  if (!svg) { zoom = 1; panX = 0; panY = 0; applyZoom(); return; }
+  const vb = (svg.getAttribute("viewBox") || "").split(/\s+/).map(Number);
+  const w = vb.length === 4 ? vb[2] : svg.clientWidth, h = vb.length === 4 ? vb[3] : svg.clientHeight;
+  if (!w || !h) return;
+  zoom = Math.min((c.clientWidth - 28) / w, (c.clientHeight - 28) / h, 1.6);
+  panX = Math.max(0, (c.clientWidth - w * zoom) / 2);
+  panY = Math.max(0, (c.clientHeight - h * zoom) / 2);
+  applyZoom();
+}
+function openModal(title, note, withSide) {
+  $("mtitle").textContent = title; $("mnote").textContent = note || "";
+  $("mside").innerHTML = ""; $("mside").hidden = !withSide; $("mzoom").innerHTML = "<div style='padding:20px;color:#666'>tekenen…</div>";
+  zoom = 1; panX = 0; panY = 0; applyZoom();
+  $("modal").hidden = false;
+}
+async function draw(code) {
+  lastMermaid = code;
+  try {
+    const m = await getMermaid();
+    const { svg } = await m.render("g" + Date.now(), code);
+    $("mzoom").innerHTML = svg;
+    const el = $("mzoom").querySelector("svg");
+    if (el) {                                   // vaste pixelmaat, zodat het zoomen voorspelbaar is
+      const vb = (el.getAttribute("viewBox") || "").split(/\s+/).map(Number);
+      if (vb.length === 4) { el.style.width = vb[2] + "px"; el.style.height = vb[3] + "px"; }
+      el.removeAttribute("width"); el.removeAttribute("height");
+    }
+    fitDiagram();
+  } catch (e) {
+    $("mzoom").innerHTML = `<pre style="white-space:pre-wrap;color:#b3261e;padding:14px">Tekenen mislukt: ${esc(e && e.message ? e.message : e)}\n\n${esc(code)}</pre>`;
+  }
+}
+function initModal() {
+  $("mclose").addEventListener("click", () => { $("modal").hidden = true; });
+  $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) $("modal").hidden = true; });
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") $("modal").hidden = true; });
+  // ook buiten de editor bereikbaar
+  window.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "E" || e.key === "e")) { e.preventDefault(); explainPlan(); }
+  });
+  $("mzoomin").addEventListener("click", () => { zoom = Math.min(zoom * 1.25, 8); applyZoom(); });
+  $("mzoomout").addEventListener("click", () => { zoom = Math.max(zoom / 1.25, 0.1); applyZoom(); });
+  $("mfit").addEventListener("click", fitDiagram);
+  $("mcopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(lastMermaid); $("mcopy").textContent = "gekopieerd"; }
+    catch (e) { $("mcopy").textContent = "kopiëren lukt niet"; }
+    setTimeout(() => { $("mcopy").textContent = "Mermaid-code kopiëren"; }, 1600);
+  });
+  const c = $("mcanvas");
+  c.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const r = c.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    panX = mx - (mx - panX) * f; panY = my - (my - panY) * f;
+    zoom = Math.max(0.1, Math.min(zoom * f, 8)); applyZoom();
+  }, { passive: false });
+  let dx = 0, dy = 0, down = false;
+  c.addEventListener("mousedown", (e) => { down = true; dx = e.clientX - panX; dy = e.clientY - panY; c.classList.add("grabbing"); });
+  window.addEventListener("mousemove", (e) => { if (down) { panX = e.clientX - dx; panY = e.clientY - dy; applyZoom(); } });
+  window.addEventListener("mouseup", () => { down = false; c.classList.remove("grabbing"); });
+}
+
+/* ---------------------------------------------------------------- uitvoeringsplan */
+async function explainPlan() {
+  if (!conn) return;
+  const sql = currentStatement().trim();
+  if (!sql) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
+  openModal("Uitvoeringsplan", "Klik op een blok voor de details. Onderaan begint de query (scans), bovenaan komt het resultaat eruit.", true);
+  try {
+    const res = await conn.query("EXPLAIN (FORMAT json) " + sql);
+    const row = res.toArray()[0];
+    const raw = row.explain_value !== undefined ? row.explain_value : row[res.schema.fields[res.schema.fields.length - 1].name];
+    let j = JSON.parse(String(raw));
+    const root = Array.isArray(j) ? j[0] : j;
+    const nodes = [];
+    (function walk(n, parent) {
+      const id = "n" + nodes.length;
+      nodes.push({ id, name: String(n.name || n.operator_name || "?"), info: n.extra_info || {}, parent });
+      for (const ch of (n.children || [])) walk(ch, id);
+    })(root, null);
+    await draw(planCode(nodes));
+    hookPlanClicks(nodes);
+  } catch (e) {
+    $("mzoom").innerHTML = `<pre style="white-space:pre-wrap;padding:14px;color:#b3261e">${esc(e && e.message ? e.message : e)}</pre>`;
+  }
+}
+function infoPairs(info) {
+  if (!info) return [];
+  if (typeof info === "string") return info.split("\n").filter((x) => x.trim()).map((x) => ["", x.trim()]);
+  return Object.entries(info).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : String(v)]);
+}
+function planCode(nodes) {
+  const clean = (s) => String(s).replace(/"/g, "#quot;").replace(/[<>]/g, " ").slice(0, 70);
+  const L = ["flowchart TD"];
+  for (const n of nodes) {
+    const pairs = infoPairs(n.info);
+    const head = `<b>${clean(n.name)}</b>`;
+    const extra = pairs.filter(([k]) => !/^(Projections|Estimated Cardinality)$/i.test(k)).slice(0, 2)
+      .map(([k, v]) => clean(k ? k + ": " + v : v)).filter(Boolean);
+    const card = pairs.find(([k]) => /Estimated Cardinality/i.test(k));
+    if (card) extra.push("~" + clean(card[1]) + " rijen");
+    L.push(`  ${n.id}["${[head, ...extra].join("<br/>")}"]`);
+  }
+  for (const n of nodes) if (n.parent) L.push(`  ${n.parent} --> ${n.id}`);
+  return L.join("\n");
+}
+function hookPlanClicks(nodes) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const showNode = (n) => {
+    const pairs = infoPairs(n.info);
+    $("mside").innerHTML = `<h4>${esc(n.name)}</h4>` + (pairs.length
+      ? "<dl>" + pairs.map(([k, v]) => `<dt>${esc(k || "info")}</dt><dd>${esc(v)}</dd>`).join("") + "</dl>"
+      : "<p>geen extra informatie</p>");
+  };
+  setTimeout(() => {
+    $("mzoom").querySelectorAll("g.node").forEach((g) => {
+      const m = /(^|-)(n\d+)(-|$)/.exec(g.id || "");
+      const n = m && byId.get(m[2]);
+      if (!n) return;
+      g.style.cursor = "pointer";
+      g.addEventListener("click", () => showNode(n));
+    });
+    if (nodes.length) showNode(nodes[0]);
+  }, 60);
+}
+
+/* ================================================================= bestand hierheen slepen
+   DuckDB kan een bestand uit de browser lezen zonder het te uploaden: registerFileHandle koppelt
+   de naam aan het File-object, daarna werkt SELECT * FROM "naam.csv" gewoon. */
+const TEXT_EXT = /\.(sql|txt)$/i;
+
+async function handleFiles(files) {
+  const geladen = [], tekst = [];
+  for (const f of files) {
+    if (TEXT_EXT.test(f.name)) { tekst.push(f); continue; }
+    if (!ddb) { show("De database is nog niet geladen; probeer het zo nog eens.", "error"); return; }
+    try {
+      try { await ddb.dropFile(f.name); } catch (e) { /* bestond nog niet */ }
+      await ddb.registerFileHandle(f.name, f, duck.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+      geladen.push(f.name);
+    } catch (e) {
+      show(`${f.name} kon niet geladen worden: ${e && e.message ? e.message : e}`, "error");
+    }
+  }
+  for (const f of tekst) {
+    const txt = await f.text();
+    newTab(f.name.replace(/\.(sql|txt)$/i, ""), txt);
+  }
+  if (geladen.length) {
+    const sql = geladen.map((n) => `-- ${n} is geladen; je kunt hem als tabel gebruiken\nSELECT *\nFROM "${n}"\nLIMIT 100;`).join("\n\n");
+    newTab(geladen.length === 1 ? geladen[0] : "bestanden", sql + "\n");
+    show(`Geladen: ${geladen.map(esc).join(", ")}. Gebruik ze als tabel, bijvoorbeeld <span class="file">SELECT * FROM "${esc(geladen[0])}";</span>`, "okmsg");
+  }
+}
+
+function initDrop() {
+  let depth = 0;
+  const over = (e) => {
+    if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes("Files")) return false;
+    e.preventDefault(); e.stopPropagation(); return true;
+  };
+  window.addEventListener("dragenter", (e) => { if (over(e)) { depth++; $("drop").hidden = false; } }, true);
+  window.addEventListener("dragover", (e) => { over(e); }, true);
+  window.addEventListener("dragleave", (e) => { if (over(e) && --depth <= 0) { depth = 0; $("drop").hidden = true; } }, true);
+  window.addEventListener("drop", (e) => {
+    if (!over(e)) return;
+    depth = 0; $("drop").hidden = true;
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length) handleFiles(files);
+  }, true);
+}
+
+/* ================================================================= start */
+$("run").addEventListener("click", run);
+$("csv").addEventListener("click", exportCsv);
+$("reload").addEventListener("click", () => location.reload());
+$("clear").addEventListener("click", () => {
+  if (confirm("Alle tabbladen leegmaken? Je eigen queries gaan weg.")) {
+    state.tabs = [{ name: "Query 1", text: WELCOME }]; state.active = 0;
+    setEditorText(WELCOME, true); renderTabs(); saveNow();
+  }
+});
+
+loadState();
+renderTabs();
+initEditor();
+initSplitter();
+initModal();
+initExercises();
+initDrop();
+boot();
+</script>
+</body>
+</html>

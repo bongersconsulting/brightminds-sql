@@ -1,0 +1,49 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Brightminds SQL-training</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;color:#1b1b1f;background:#f6f7f9;line-height:1.5}
+header{background:#1b1b1f;color:#fff;padding:22px 24px} header h1{margin:0;font-size:20px} header p{margin:4px 0 0;opacity:.8;font-size:14px}
+.wrap{max-width:980px;margin:0 auto;padding:22px 24px 60px}
+.card{background:#fff;border:1px solid #dcdfe4;border-radius:10px;padding:18px 20px;margin:0 0 18px}
+.card h2{margin:0 0 10px;font-size:17px} .card h3{margin:16px 0 6px;font-size:14px;color:#444}
+a{color:#2b6cb0} ul{margin:8px 0;padding-left:20px} li{margin:3px 0}
+.btn{display:inline-block;background:#2b6cb0;color:#fff;border:0;border-radius:7px;padding:9px 15px;cursor:pointer;
+     font:inherit;font-size:14px;text-decoration:none;margin:3px 6px 3px 0}
+.btn.ghost{background:#fff;color:#1b1b1f;border:1px solid #dcdfe4}
+pre{background:#f3f3f3;border:1px solid #e3e5e8;border-radius:7px;padding:12px 14px;overflow-x:auto;
+    font-family:Consolas,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;margin:8px 0}
+.steps{counter-reset:s;list-style:none;padding:0} .steps li{counter-increment:s;margin:10px 0 10px 34px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:-34px;top:0;width:24px;height:24px;border-radius:50%;
+    background:#2b6cb0;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center}
+.note{font-size:13px;color:#555} .file{font-family:Consolas,monospace;font-size:12.5px;color:#666}
+.head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #eee;background:#fafafa}
+.head h2{font-size:15px;margin:0;flex:1}
+.ex{background:#fff;border:1px solid #dcdfe4;border-radius:8px;margin:0 0 16px;overflow:hidden}
+.ex pre{margin:0;border:0;border-radius:0;background:#fff}
+nav.sub{font-size:13px;padding:10px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:10px 0 0}
+.tile{display:block;background:#fff;border:1px solid #dcdfe4;border-radius:12px;padding:22px 22px 20px;
+      text-decoration:none;color:#1b1b1f;transition:border-color .12s,box-shadow .12s}
+.tile:hover{border-color:#2b6cb0;box-shadow:0 2px 10px rgba(43,108,176,.14)}
+.tile h2{margin:0 0 6px;font-size:19px;color:#2b6cb0}
+.tile p{margin:0;font-size:14px;color:#555}
+.tile.quiet h2{color:#1b1b1f}
+.big{font-size:16px;padding:12px 20px}
+</style></head><body>
+<header><h1>Brightminds SQL-training</h1><p>Kies je trainingsdag</p></header>
+<div class="wrap"><div class="tiles">
+  <a class="tile" href="dag1/">
+    <h2>Dag 1 &middot; SQL Fundamentals</h2>
+    <p>Werkblad, casus EcoDrive en het huiswerk.</p>
+  </a>
+  <a class="tile" href="dag2/">
+    <h2>Dag 2 &middot; SQL Advanced</h2>
+    <p>Werkblad, casus SQL Murder Mystery en de handout.</p>
+  </a>
+  <a class="tile quiet" href="alternatief/">
+    <h2>Alternatief</h2>
+    <p>Alleen nodig als het werkblad het niet doet: sql-workbench.com.</p>
+  </a>
+</div></div><script>
+function copyEl(id, btn){const t=document.getElementById(id).innerText;
+navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Gekopieerd!';setTimeout(()=>btn.textContent=o,1500);});}
+</script></body></html>

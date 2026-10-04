@@ -1,0 +1,53 @@
+-- ==========================================================================
+-- d1_oefening_7 - SQL schrijven met een LLM: laten schrijven, zelf controleren
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Werkwijze (tweetallen, 12 minuten):
+--     1. Benoem samen de GRAIN van het antwoord: "1 rij per ...".
+--     2. Persoon A: vul het prompt-sjabloon hieronder aan en stuur het naar een LLM (ChatGPT, Claude, Copilot, ...).
+--        Persoon B schrijft ONDERTUSSEN drie checks op:
+--           - hoeveel rijen verwacht je?
+--           - één bedrijf waarvan je het antwoord kunt narekenen
+--           - welke join kan rijen vermenigvuldigen?
+--     3. Plak de query hieronder, draai hem, draai je checks. Klopt het?
+--     4. Niet? Fix het zelf (of laat het model fixen, maar snap de fix).
+--     Geen LLM bij de hand? Persoon B schrijft de query zelf; persoon A speelt reviewer.
+--
+-- Vraag A: geef per bedrijf (CompanyName) het aantal orders en de totale orderwaarde (TotalDue).
+--          1 rij per bedrijf. Sorteer op orderwaarde aflopend.
+--
+-- Vraag B: welke bedrijven hebben een product van productmodel 'Racing Socks' besteld? 1 rij per bedrijf.
+--
+-- ---------------------------------------------------------------------------
+-- PROMPT-SJABLOON (kopieer, vul de vraag in)
+-- ---------------------------------------------------------------------------
+-- Je bent een data-analist. Dialect: DuckDB (Postgres-achtig: LIMIT, COALESCE, length, date_diff;
+-- géén TOP, ISNULL, GETDATE of [haken]).
+--
+-- Schema (PK = primary key, FK = foreign key):
+--   SalesLT.Customer(CustomerID PK, CompanyName, FirstName, LastName, EmailAddress)
+--   SalesLT.SalesOrderHeader(SalesOrderID PK, CustomerID FK->Customer, OrderDate, SubTotal, TaxAmt, Freight, TotalDue)
+--   SalesLT.SalesOrderDetail(SalesOrderDetailID PK, SalesOrderID FK->SalesOrderHeader, ProductID FK->Product,
+--                            OrderQty, UnitPrice, UnitPriceDiscount, LineTotal)
+--   SalesLT.Product(ProductID PK, Name, ProductModelID FK->ProductModel, ListPrice, StandardCost)
+--   SalesLT.ProductModel(ProductModelID PK, Name)
+--
+-- Vraag: [VRAAG A of B]. Grain: 1 rij per [...].
+-- Stijl: keywords in hoofdletters, komma's vóór de kolomnaam, elke clause op een nieuwe regel,
+-- aliases voor tabellen en berekende kolommen, WHERE 1=1 gevolgd door AND-filters.
+-- Noem je aannames expliciet. Geef daarna een aparte controle-query voor het aantal rijen of het totaal.
+-- ---------------------------------------------------------------------------
+
+-- Query van het LLM:
+
+
+-- Eigen checks (schrijf ze op VOORDAT je het antwoord ziet):
+-- check 1: verwacht aantal rijen
+-- check 2: één bedrijf narekenen
+-- check 3: fan-out-test (rijen tellen vóór en ná de join)

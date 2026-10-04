@@ -1,0 +1,16 @@
+SQL Murder Mystery · casus dag 2
+
+Volgorde:
+  1. ddl/        maak de tabellen aan (voor sommige tabellen ontbreekt het ddl-bestand: schrijf die zelf,
+                 op basis van het ERD (ERD_murder_mystery.png) en de kolomnamen in het bijbehorende data-bestand)
+  2. ddl/ddl-check.sql
+  3. data/       vul de tabellen (fix de tabelstructuur of de insert statements waar nodig; de datatypes uit de
+                 ddl-bestanden mogen niet veranderen). Voor income is er geen insert-bestand maar een CSV:
+                 sleep data-income.csv in het werkblad (in SQL Workbench: naar het vak linksonder) en gebruik
+                 INSERT INTO income SELECT * FROM "data-income.csv";
+  4. data/data-check.sql
+  5. Los de moord op (zie de casusbeschrijving).
+
+Tip: de data-bestanden zijn groot. Sleep een .sql-bestand in het werkblad: hij opent dan in een eigen
+     tabblad. Zet je cursor in het statement en druk Ctrl+Enter.
+Ververs je de pagina, dan zijn je tabellen weg; bewaar je eigen DDL-statements in een tekstbestand.

@@ -1,0 +1,29 @@
+-- ==========================================================================
+-- d1_oefening_3 - Aggregeren en groeperen
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- De meest gebruikte aggregatiefuncties:
+--
+--     COUNT(*)            telt alle rijen
+--     COUNT(kolom)        telt de rijen waar de kolom niet leeg (NULL) is
+--     SUM(kolom)          som
+--     AVG(kolom)          gemiddelde
+--     MIN(kolom)          kleinste waarde
+--     MAX(kolom)          grootste waarde
+--
+-- Opdracht 3: schrijf queries die de volgende vragen beantwoorden.
+--     1. Hoeveel klanten heeft dit bedrijf? (tabel SalesLT.Customer)
+--     2. Hoeveel unieke bedrijfsnamen (CompanyName) zitten er in de klantentabel? (tip: COUNT(DISTINCT ...))
+--     3. Wat zijn die unieke bedrijfsnamen? (tip: GROUP BY)
+--     4. Welke bedrijfsnamen komen vaker dan 1 keer voor, en hoe vaak? (tip: HAVING)
+--
+-- Bonus:
+--     5. Hoe duur is het duurste product (ListPrice in SalesLT.Product)?
+--     6. Wat is de gemiddelde prijs per kilo (ListPrice / Weight) van producten in productcategorie 18?
+--     7. Draai: SUMMARIZE SalesLT.Product;   Wat valt je op bij de kolom Weight?

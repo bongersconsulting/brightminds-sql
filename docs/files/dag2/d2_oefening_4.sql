@@ -1,0 +1,26 @@
+-- ==========================================================================
+-- d2_oefening_4 - Strings
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- In deze oefening ga je oefenen met string-functies (tekst).
+--     length(s)            lengte              lower(s) / upper(s)     kleine / hoofdletters
+--     left(s, n)           eerste n tekens     substring(s, start, n)  deel van een string (start telt vanaf 1)
+--     strpos(s, zoek)      positie van zoek in s (0 = niet gevonden)   concat(a, b, ...) of a || b   samenvoegen
+--     trim(s)              spaties weghalen    replace(s, oud, nieuw)  vervangen
+--
+-- Opdracht 4a: geef de eerste letter van de voornaam (FirstName) van alle klanten in SalesLT.Customer.
+--
+-- Opdracht 4b: geef de voorlaatste letter van de voornaam van alle klanten.
+--
+-- Opdracht 4c: geef de producten (SalesLT.Product) waarbij de kleur (Color) NIET in de productnaam (Name) voorkomt.
+--              Let op: Color kan leeg zijn. (Tip: strpos en COALESCE.)
+--
+-- Bonus:       geef de producten waarbij 'Road' voorkomt in de productnaam, in de naam van de productcategorie
+--              (SalesLT.ProductCategory) of in de naam van het productmodel (SalesLT.ProductModel).
+--              (Tip: concat en LIKE met %.)

@@ -1,0 +1,77 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Alternatief</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;color:#1b1b1f;background:#f6f7f9;line-height:1.5}
+header{background:#1b1b1f;color:#fff;padding:22px 24px} header h1{margin:0;font-size:20px} header p{margin:4px 0 0;opacity:.8;font-size:14px}
+.wrap{max-width:980px;margin:0 auto;padding:22px 24px 60px}
+.card{background:#fff;border:1px solid #dcdfe4;border-radius:10px;padding:18px 20px;margin:0 0 18px}
+.card h2{margin:0 0 10px;font-size:17px} .card h3{margin:16px 0 6px;font-size:14px;color:#444}
+a{color:#2b6cb0} ul{margin:8px 0;padding-left:20px} li{margin:3px 0}
+.btn{display:inline-block;background:#2b6cb0;color:#fff;border:0;border-radius:7px;padding:9px 15px;cursor:pointer;
+     font:inherit;font-size:14px;text-decoration:none;margin:3px 6px 3px 0}
+.btn.ghost{background:#fff;color:#1b1b1f;border:1px solid #dcdfe4}
+pre{background:#f3f3f3;border:1px solid #e3e5e8;border-radius:7px;padding:12px 14px;overflow-x:auto;
+    font-family:Consolas,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;margin:8px 0}
+.steps{counter-reset:s;list-style:none;padding:0} .steps li{counter-increment:s;margin:10px 0 10px 34px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:-34px;top:0;width:24px;height:24px;border-radius:50%;
+    background:#2b6cb0;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center}
+.note{font-size:13px;color:#555} .file{font-family:Consolas,monospace;font-size:12.5px;color:#666}
+.head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #eee;background:#fafafa}
+.head h2{font-size:15px;margin:0;flex:1}
+.ex{background:#fff;border:1px solid #dcdfe4;border-radius:8px;margin:0 0 16px;overflow:hidden}
+.ex pre{margin:0;border:0;border-radius:0;background:#fff}
+nav.sub{font-size:13px;padding:10px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:10px 0 0}
+.tile{display:block;background:#fff;border:1px solid #dcdfe4;border-radius:12px;padding:22px 22px 20px;
+      text-decoration:none;color:#1b1b1f;transition:border-color .12s,box-shadow .12s}
+.tile:hover{border-color:#2b6cb0;box-shadow:0 2px 10px rgba(43,108,176,.14)}
+.tile h2{margin:0 0 6px;font-size:19px;color:#2b6cb0}
+.tile p{margin:0;font-size:14px;color:#555}
+.tile.quiet h2{color:#1b1b1f}
+.big{font-size:16px;padding:12px 20px}
+</style></head><body>
+<header><h1>Alternatief</h1><p>Brightminds SQL-training</p></header>
+<div class="wrap"><div class="card">
+  <h2>sql-workbench.com</h2>
+  <p>Gebruik dit alleen als het werkblad het niet doet. Hier laad je de database zelf.</p>
+  <ol class="steps">
+    <li>Open <a href="https://sql-workbench.com" target="_blank" rel="noopener">sql-workbench.com</a> en wacht tot
+        &ldquo;Loading DuckDB&rdquo; weg is.</li>
+    <li>Kopieer de regels hieronder, plak ze in de editor, zet je cursor op een regel en druk <b>Ctrl+Enter</b>.
+        Doe dat voor elke regel.
+        <p><button class="btn ghost" onclick="copyEl('start', this)">Kopieer de startregels</button></p>
+        <pre id="start">-- Database laden in SQL Workbench (sql-workbench.com)
+-- Plak dit, zet je cursor op een regel en druk Ctrl+Enter (Mac: Cmd+Enter). Doe dat per regel.
+-- Let op: na verversen of in een nieuw tabblad moet je dit opnieuw doen.
+
+ATTACH &#x27;https://raw.githubusercontent.com/bongersconsulting/brightminds-sql/main/brightminds_sql.duckdb&#x27; AS bm (READ_ONLY);
+
+COPY FROM DATABASE bm TO memory;
+
+DETACH bm;
+
+-- Controle: dit hoort &#x27;OK: 440 klanten, 294 producten, 5889 contracten&#x27; te geven.
+SELECT &#x27;OK: &#x27;
+    || (SELECT COUNT(*) FROM SalesLT.Customer) || &#x27; klanten, &#x27;
+    || (SELECT COUNT(*) FROM SalesLT.Product) || &#x27; producten, &#x27;
+    || (SELECT COUNT(*) FROM ecodrive.contract) || &#x27; contracten&#x27; AS status;
+</pre></li>
+    <li>Je ziet <b>OK: 440 klanten, 294 producten, 5889 contracten</b>.</li>
+  </ol>
+  <p class="note"><b>Let op:</b> de database zit in dat ene tabblad. Een nieuw tabblad of een verversing betekent:
+     alles weg en opnieuw laden. Werk dus in &eacute;&eacute;n tabblad en plak elke oefening <b>onder</b> je vorige werk.</p>
+  <p class="note">Wordt de download geblokkeerd door je netwerk? Download dan
+     <a href="../files/brightminds_sql.duckdb">brightminds_sql.duckdb</a>, sleep het bestand naar het vak linksonder in
+     SQL Workbench en draai daarna alleen <span class="file">COPY FROM DATABASE brightminds_sql TO memory;</span>
+     en <span class="file">DETACH brightminds_sql;</span></p>
+</div>
+
+<div class="card">
+  <h2>De oefeningen om te kopi&euml;ren</h2>
+  <p><a class="btn ghost" href="../oefeningen-dag1.html">Oefeningen dag 1</a>
+     <a class="btn ghost" href="../oefeningen-dag2.html">Oefeningen dag 2</a></p>
+  <p class="note">Of als bestanden: <a href="../files/dag1.zip">dag1.zip</a> &middot;
+     <a href="../files/dag2.zip">dag2.zip</a></p>
+</div></div><script>
+function copyEl(id, btn){const t=document.getElementById(id).innerText;
+navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Gekopieerd!';setTimeout(()=>btn.textContent=o,1500);});}
+</script></body></html>

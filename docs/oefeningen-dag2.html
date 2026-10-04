@@ -1,0 +1,320 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Oefeningen dag 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;color:#1b1b1f;background:#f6f7f9;line-height:1.5}
+header{background:#1b1b1f;color:#fff;padding:22px 24px} header h1{margin:0;font-size:20px} header p{margin:4px 0 0;opacity:.8;font-size:14px}
+.wrap{max-width:980px;margin:0 auto;padding:22px 24px 60px}
+.card{background:#fff;border:1px solid #dcdfe4;border-radius:10px;padding:18px 20px;margin:0 0 18px}
+.card h2{margin:0 0 10px;font-size:17px} .card h3{margin:16px 0 6px;font-size:14px;color:#444}
+a{color:#2b6cb0} ul{margin:8px 0;padding-left:20px} li{margin:3px 0}
+.btn{display:inline-block;background:#2b6cb0;color:#fff;border:0;border-radius:7px;padding:9px 15px;cursor:pointer;
+     font:inherit;font-size:14px;text-decoration:none;margin:3px 6px 3px 0}
+.btn.ghost{background:#fff;color:#1b1b1f;border:1px solid #dcdfe4}
+pre{background:#f3f3f3;border:1px solid #e3e5e8;border-radius:7px;padding:12px 14px;overflow-x:auto;
+    font-family:Consolas,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;margin:8px 0}
+.steps{counter-reset:s;list-style:none;padding:0} .steps li{counter-increment:s;margin:10px 0 10px 34px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:-34px;top:0;width:24px;height:24px;border-radius:50%;
+    background:#2b6cb0;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center}
+.note{font-size:13px;color:#555} .file{font-family:Consolas,monospace;font-size:12.5px;color:#666}
+.head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #eee;background:#fafafa}
+.head h2{font-size:15px;margin:0;flex:1}
+.ex{background:#fff;border:1px solid #dcdfe4;border-radius:8px;margin:0 0 16px;overflow:hidden}
+.ex pre{margin:0;border:0;border-radius:0;background:#fff}
+nav.sub{font-size:13px;padding:10px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:10px 0 0}
+.tile{display:block;background:#fff;border:1px solid #dcdfe4;border-radius:12px;padding:22px 22px 20px;
+      text-decoration:none;color:#1b1b1f;transition:border-color .12s,box-shadow .12s}
+.tile:hover{border-color:#2b6cb0;box-shadow:0 2px 10px rgba(43,108,176,.14)}
+.tile h2{margin:0 0 6px;font-size:19px;color:#2b6cb0}
+.tile p{margin:0;font-size:14px;color:#555}
+.tile.quiet h2{color:#1b1b1f}
+.big{font-size:16px;padding:12px 20px}
+</style></head><body>
+<header><h1>Oefeningen dag 2</h1><p>Brightminds SQL-training</p></header>
+<div class="wrap"><div class="card">
+  <h2>Werkwijze</h2>
+  <ul>
+    <li>In het <a href="werkblad.html"><b>werkblad</b></a> kies je de oefening gewoon links in de lijst; hij opent
+        dan in een eigen tabblad. Deze pagina heb je dan niet nodig.</li>
+    <li>Werk je in sql-workbench.com? Klik dan hieronder op <b>Kopieer</b> en plak de oefening
+        <b>onder je vorige werk</b> (Ctrl+End, dan plakken). Werk in één tabblad en ververs niet.</li>
+    <li>Zet je cursor <b>in</b> één query en druk <b>Ctrl+Enter</b> (Mac: Cmd+Enter). Selecteer niet het hele bestand.</li>
+  </ul>
+</div>
+<nav class="sub"><a href="#d2_oefening_1">1. Window functions</a> &middot; <a href="#d2_oefening_2">2. Running total en moving average</a> &middot; <a href="#d2_oefening_3">3. CASE WHEN en datatypes</a> &middot; <a href="#d2_oefening_4">4. Strings</a> &middot; <a href="#d2_oefening_5">5. Datum en tijd</a> &middot; <a href="#d2_oefening_6">6. Review drie LLM-queries</a> &middot; <a href="oefeningen-dag1.html">oefeningen dag 1</a></nav>
+<section class="ex" id="d2_oefening_1">
+  <div class="head"><h2>Window functions</h2><span class="file">d2_oefening_1.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_1', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_1">-- ==========================================================================
+-- d2_oefening_1 - Window functions
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- In deze oefening ga je oefenen met window functions.
+-- Je maakt zelf een tabel aan. Die komt in dezelfde database als SalesLT en ecodrive, in het geheugen van je browser.
+-- Ververs je de pagina, dan is de tabel weg: de CREATE TABLE hieronder opnieuw uitvoeren. Je tekst in het
+-- werkblad blijft wel bewaard.
+--
+-- Opdracht 1a: maak de tabel student_score aan met de query hieronder.
+--
+-- Opdracht 1b: schrijf een SELECT query met alle kolommen plus een kolom maximum_score en een kolom minimum_score
+--              met de hoogste en laagste score over alle rijen (tip: gebruik alleen OVER (), geen PARTITION BY).
+--
+-- Opdracht 1c: schrijf een SELECT query met een kolom dep_maximum_score en dep_average_score:
+--              de hoogste en de gemiddelde score per departement (tip: OVER (PARTITION BY ...)).
+--
+-- Opdracht 1d: schrijf een SELECT query met een kolom score_rank die de studenten rangschikt op score,
+--              per departement (tip: RANK() OVER (PARTITION BY ... ORDER BY ...)).
+--
+-- Opdracht 1e: gebruik DENSE_RANK in plaats van RANK in de query van 1d. Wat is het verschil in de output?
+--
+-- Bonus:       geef alleen de nummer 1 van elk departement (tip: QUALIFY, of een CTE met WHERE).
+
+CREATE OR REPLACE TABLE student_score (
+    student_id INTEGER PRIMARY KEY
+    , student_name VARCHAR
+    , dep_name VARCHAR
+    , score INTEGER
+);
+
+INSERT INTO student_score (student_id, student_name, dep_name, score)
+VALUES (11, &#x27;Ibrahim&#x27;, &#x27;Computer Science&#x27;, 80)
+    , (7, &#x27;Taiwo&#x27;, &#x27;Microbiology&#x27;, 76)
+    , (9, &#x27;Nurain&#x27;, &#x27;Biochemistry&#x27;, 80)
+    , (8, &#x27;Joel&#x27;, &#x27;Computer Science&#x27;, 90)
+    , (10, &#x27;Mustapha&#x27;, &#x27;Industrial Chemistry&#x27;, 78)
+    , (5, &#x27;Muritadoh&#x27;, &#x27;Biochemistry&#x27;, 85)
+    , (2, &#x27;Yusuf&#x27;, &#x27;Biochemistry&#x27;, 70)
+    , (3, &#x27;Habeebah&#x27;, &#x27;Microbiology&#x27;, 80)
+    , (1, &#x27;Tomiwa&#x27;, &#x27;Microbiology&#x27;, 65)
+    , (4, &#x27;Gbadebo&#x27;, &#x27;Computer Science&#x27;, 80)
+    , (12, &#x27;Tolu&#x27;, &#x27;Computer Science&#x27;, 67);
+
+SELECT *
+FROM student_score
+ORDER BY score;
+</pre></section><section class="ex" id="d2_oefening_2">
+  <div class="head"><h2>Running total en moving average</h2><span class="file">d2_oefening_2.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_2', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_2">-- ==========================================================================
+-- d2_oefening_2 - Running total en moving average
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- In deze oefening gebruik je window functions voor een running total (lopend totaal) en een moving average.
+--
+-- Opdracht 2a: maak de tabel bikeshare aan met de query hieronder.
+--
+-- Opdracht 2b: schrijf een SELECT query met de kolommen start_time, bike_id_nr en duration_seconds
+--              en een kolom running_total: de cumulatieve som van duration_seconds, in volgorde van start_time.
+--              Kijk goed naar de output. Klopt elke rij? (Tip: er zijn ritten met precies dezelfde start_time.)
+--
+-- Opdracht 2c: schrijf een SELECT query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van de
+--              3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).
+--
+-- Bonus:       wat gebeurt er als je in 2b alleen ORDER BY start_time gebruikt, zonder ROWS BETWEEN ...? Waarom?
+
+CREATE OR REPLACE TABLE bikeshare (
+    duration_seconds INTEGER
+    , start_time TIMESTAMP
+    , end_time TIMESTAMP
+    , start_terminal VARCHAR
+    , end_terminal VARCHAR
+    , bike_id_nr INTEGER
+    , member_type VARCHAR
+);
+
+INSERT INTO bikeshare
+VALUES (605,  &#x27;2024-01-05 12:30:00&#x27;, &#x27;2024-01-05 12:40:05&#x27;, &#x27;DIEMEN&#x27;, &#x27;AMS&#x27;, 3025, &#x27;registered&#x27;)
+    , (55,   &#x27;2024-01-05 12:30:10&#x27;, &#x27;2024-01-05 12:31:05&#x27;, &#x27;DIEMEN&#x27;, &#x27;AMS&#x27;, 1025, &#x27;registered&#x27;)
+    , (65,   &#x27;2024-01-05 12:30:10&#x27;, &#x27;2024-01-05 12:31:15&#x27;, &#x27;DIEMEN&#x27;, &#x27;AMS&#x27;, 2025, &#x27;casual&#x27;)
+    , (7255, &#x27;2024-01-06 16:30:10&#x27;, &#x27;2024-01-06 18:31:05&#x27;, &#x27;DIEMEN&#x27;, &#x27;AMS&#x27;, 1025, &#x27;registered&#x27;)
+    , (7265, &#x27;2024-01-06 16:30:10&#x27;, &#x27;2024-01-06 18:31:15&#x27;, &#x27;DIEMEN&#x27;, &#x27;AMS&#x27;, 2025, &#x27;casual&#x27;)
+    , (55,   &#x27;2024-01-07 10:30:10&#x27;, &#x27;2024-01-07 10:31:05&#x27;, &#x27;AMS&#x27;,    &#x27;AMS&#x27;, 1025, &#x27;registered&#x27;)
+    , (65,   &#x27;2024-01-07 10:30:10&#x27;, &#x27;2024-01-07 10:31:15&#x27;, &#x27;AMS&#x27;,    &#x27;AMS&#x27;, 2025, &#x27;casual&#x27;);
+
+SELECT *
+FROM bikeshare
+ORDER BY start_time
+    , bike_id_nr;
+</pre></section><section class="ex" id="d2_oefening_3">
+  <div class="head"><h2>CASE WHEN en datatypes</h2><span class="file">d2_oefening_3.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_3', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_3">-- ==========================================================================
+-- d2_oefening_3 - CASE WHEN en datatypes
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Stel je hebt een tabel TBL met een kolom NMBR met de waardes:
+-- (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1)
+--
+-- Opdracht 3a: maak de tabel TBL aan met de query hieronder, precies zoals hij er staat.
+--
+-- Opdracht 3b: schrijf een SELECT query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).
+--              Je krijgt een foutmelding. Lees hem goed: waarom weigert DuckDB dit?
+--              Welk datatype had de kolom moeten hebben? Pas de tabel aan (ALTER TABLE ... ALTER COLUMN ... TYPE ...)
+--              en probeer opnieuw.
+--
+-- Bonus:       herschrijf de query uit 3b met de functie IF(conditie, waarde_als_waar, waarde_als_onwaar).
+
+CREATE OR REPLACE TABLE TBL (
+    NMBR VARCHAR          -- bewust het verkeerde datatype
+);
+
+INSERT INTO TBL (NMBR)
+VALUES (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1);
+
+SELECT *
+FROM TBL;
+</pre></section><section class="ex" id="d2_oefening_4">
+  <div class="head"><h2>Strings</h2><span class="file">d2_oefening_4.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_4', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_4">-- ==========================================================================
+-- d2_oefening_4 - Strings
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- In deze oefening ga je oefenen met string-functies (tekst).
+--     length(s)            lengte              lower(s) / upper(s)     kleine / hoofdletters
+--     left(s, n)           eerste n tekens     substring(s, start, n)  deel van een string (start telt vanaf 1)
+--     strpos(s, zoek)      positie van zoek in s (0 = niet gevonden)   concat(a, b, ...) of a || b   samenvoegen
+--     trim(s)              spaties weghalen    replace(s, oud, nieuw)  vervangen
+--
+-- Opdracht 4a: geef de eerste letter van de voornaam (FirstName) van alle klanten in SalesLT.Customer.
+--
+-- Opdracht 4b: geef de voorlaatste letter van de voornaam van alle klanten.
+--
+-- Opdracht 4c: geef de producten (SalesLT.Product) waarbij de kleur (Color) NIET in de productnaam (Name) voorkomt.
+--              Let op: Color kan leeg zijn. (Tip: strpos en COALESCE.)
+--
+-- Bonus:       geef de producten waarbij &#x27;Road&#x27; voorkomt in de productnaam, in de naam van de productcategorie
+--              (SalesLT.ProductCategory) of in de naam van het productmodel (SalesLT.ProductModel).
+--              (Tip: concat en LIKE met %.)
+</pre></section><section class="ex" id="d2_oefening_5">
+  <div class="head"><h2>Datum en tijd</h2><span class="file">d2_oefening_5.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_5', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_5">-- ==========================================================================
+-- d2_oefening_5 - Datum en tijd
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- In deze oefening ga je oefenen met datumfuncties (tabel bikeshare uit oefening 2).
+--     date_diff(&#x27;day&#x27;, a, b)     verschil tussen a en b in dagen (&#x27;second&#x27;, &#x27;minute&#x27;, &#x27;month&#x27;, &#x27;year&#x27; kan ook)
+--     year(d) / month(d) / day(d)   onderdelen van een datum
+--     date_trunc(&#x27;month&#x27;, d)     afronden naar het begin van de maand
+--     current_date / now()       vandaag / nu
+--     strptime(tekst, formaat)   tekst naar datum, bijv. strptime(&#x27;Jan 2024&#x27;, &#x27;%b %Y&#x27;)
+--
+-- Opdracht 5a: geef duration_seconds en daarnaast het verschil in seconden tussen start_time en end_time.
+--              Je berekende kolom hoort hetzelfde te zijn als duration_seconds.
+--
+-- Opdracht 5b: geef start_time en de kolommen jaar, maand en dag.
+--
+-- Opdracht 5c: maak de tabel ledger_months aan (hieronder) en sorteer de rijen in kalendervolgorde
+--              (tip: CASE WHEN op left(Month, 3), of strptime).
+--
+-- Bonus:       geef start_terminal en duration_seconds en een kolom difference: het verschil met de vorige rit
+--              (op duration_seconds gesorteerd), per start_terminal (tip: window functie LAG).
+
+CREATE OR REPLACE TABLE ledger_months (
+    EntryNo INTEGER
+    , Month VARCHAR
+    , Amount DECIMAL(10, 2)
+);
+
+INSERT INTO ledger_months
+VALUES (1, &#x27;Jan 2024&#x27;, 120.00)
+    , (2, &#x27;Mrt 2024&#x27;, 95.50)
+    , (3, &#x27;Feb 2024&#x27;, 210.10)
+    , (4, &#x27;Apr 2024&#x27;, 80.00)
+    , (5, &#x27;Jun 2024&#x27;, 133.30)
+    , (6, &#x27;Mei 2024&#x27;, 99.99);
+</pre></section><section class="ex" id="d2_oefening_6">
+  <div class="head"><h2>Review drie LLM-queries</h2><span class="file">d2_oefening_6.sql</span>
+    <button class="btn" onclick="copyEl('pre-d2_oefening_6', this)">Kopieer</button></div>
+  <pre id="pre-d2_oefening_6">-- ==========================================================================
+-- d2_oefening_6 - Review drie LLM-queries
+-- ==========================================================================
+--
+-- WERKWIJZE
+--   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
+--     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
+--   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
+--     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
+--
+-- Drie queries die een LLM schreef. Per query (tweetallen, 15 minuten totaal):
+--     1. Wat was de vraag? Zeg hem in je eigen woorden, inclusief de grain (&quot;1 rij per ...&quot;).
+--     2. Wat gaat er mis? Gebruik de vijf patronen:
+--          1 join fan-out · 2 aggregatie vóór/ná filter · 3 window-scoping · 4 datum &amp; tijd · 5 dialect-mix
+--     3. Wat is de fix? Schrijf hem en controleer met een van de standaard checks.
+--     Je mag een LLM laten reviewen. Vraag daarna: vond het model zijn eigen fout?
+
+-------------------------------------------------------------------------
+-- Query 1 · prompt was: &quot;Geef per klant (CustomerID) het aantal orders, de totale orderwaarde (TotalDue)
+--                        en het aantal bestelde artikelen.&quot;
+-------------------------------------------------------------------------
+SELECT C.CustomerID
+    , C.CompanyName
+    , COUNT(SOH.SalesOrderID) AS aantal_orders
+    , SUM(SOH.TotalDue) AS totale_orderwaarde
+    , SUM(SOD.OrderQty) AS aantal_artikelen
+FROM SalesLT.Customer AS C
+INNER JOIN SalesLT.SalesOrderHeader AS SOH ON SOH.CustomerID = C.CustomerID
+INNER JOIN SalesLT.SalesOrderDetail AS SOD ON SOD.SalesOrderID = SOH.SalesOrderID
+GROUP BY C.CustomerID
+    , C.CompanyName
+ORDER BY totale_orderwaarde DESC;
+
+-------------------------------------------------------------------------
+-- Query 2 · prompt was: &quot;Geef per orderregel het lopende totaal (running total) van de regelwaarde (LineTotal)
+--                        binnen de order, in volgorde van SalesOrderDetailID.&quot;
+-------------------------------------------------------------------------
+SELECT SOD.SalesOrderID
+    , SOD.SalesOrderDetailID
+    , SOD.LineTotal
+    , SUM(SOD.LineTotal) OVER (ORDER BY SOD.SalesOrderID) AS running_total
+FROM SalesLT.SalesOrderDetail AS SOD
+ORDER BY SOD.SalesOrderID
+    , SOD.SalesOrderDetailID;
+
+-------------------------------------------------------------------------
+-- Query 3 · prompt was: &quot;Geef de 10 orders uit 2008 van bedrijven met een korte naam (minder dan 15 tekens),
+--                        met de bedrijfsnaam, de orderdatum en het aantal dagen tot verzending.&quot;
+-------------------------------------------------------------------------
+SELECT TOP 10 SOH.SalesOrderID
+    , C.CompanyName
+    , SOH.OrderDate
+    , DATEDIFF(day, SOH.OrderDate, ISNULL(SOH.ShipDate, GETDATE())) AS dagen_tot_verzending
+FROM SalesLT.SalesOrderHeader AS SOH
+INNER JOIN SalesLT.Customer AS C ON C.CustomerID = SOH.CustomerID
+WHERE SOH.OrderDate BETWEEN &#x27;2008-01-01&#x27; AND &#x27;2008-12-31&#x27;
+    AND LEN(C.CompanyName) &lt; 15
+ORDER BY SOH.OrderDate;
+</pre></section></div><script>
+function copyEl(id, btn){const t=document.getElementById(id).innerText;
+navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Gekopieerd!';setTimeout(()=>btn.textContent=o,1500);});}
+</script></body></html>
