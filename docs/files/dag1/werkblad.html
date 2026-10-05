@@ -379,6 +379,7 @@ function initEditor() {
         "Ctrl-Enter": run, "Cmd-Enter": run,
         "Ctrl-/": (c) => c.toggleComment(), "Cmd-/": (c) => c.toggleComment(),
         "Shift-Ctrl-E": explainPlan, "Shift-Cmd-E": explainPlan,
+        "Shift-Ctrl-F": formatSql, "Shift-Cmd-F": formatSql,
       },
     });
     cm.setValue(start);
@@ -427,12 +428,120 @@ function splitStatements(sql) {
   if (sql.slice(start).trim()) out.push({ text: sql.slice(start), from: start, to: sql.length });
   return out.filter((s) => s.text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ").trim().length > 0);
 }
+function currentRange() {
+  const pos = cursorIndex(), stmts = splitStatements(text());
+  for (const s of stmts) if (pos >= s.from && pos <= s.to + 1) return s;
+  return stmts.length ? stmts[stmts.length - 1] : null;
+}
 function currentStatement() {
   const sel = selection();
   if (sel.trim()) return sel;
-  const pos = cursorIndex(), stmts = splitStatements(text());
-  for (const s of stmts) if (pos >= s.from && pos <= s.to + 1) return s.text;
-  return stmts.length ? stmts[stmts.length - 1].text : "";
+  const s = currentRange();
+  return s ? s.text : "";
+}
+
+/* ================================================================= formatteren (Ctrl+Shift+F)
+   Formatteert de selectie, of anders de query waar de cursor in staat (de comments erboven blijven staan).
+   sql-formatter doet het zware werk; daarna zetten we het in de huisstijl van de training:
+   keywords in hoofdletters, eerste item naast het keyword en komma's vóór de kolomnaam. */
+const SQL_FORMATTER = "https://cdn.jsdelivr.net/npm/sql-formatter@15.9.0/dist/sql-formatter.min.js";
+let formatterP = null;
+function getFormatter() {
+  if (!formatterP) formatterP = new Promise((resolve, reject) => {
+    const sc = document.createElement("script");
+    sc.src = SQL_FORMATTER;
+    sc.onload = () => (window.sqlFormatter ? resolve(window.sqlFormatter) : reject(new Error("sql-formatter niet gevonden")));
+    sc.onerror = () => { formatterP = null; reject(new Error("sql-formatter kon niet geladen worden")); };
+    document.head.appendChild(sc);
+  });
+  return formatterP;
+}
+// Past fn toe op de stukken SQL buiten strings, "identifiers" en comments.
+function mapCode(sql, fn) {
+  let out = "", code = "", i = 0;
+  const flush = () => { out += fn(code); code = ""; };
+  while (i < sql.length) {
+    const c = sql[i], n = sql[i + 1];
+    let j = -1;
+    if (c === "-" && n === "-") { j = sql.indexOf("\n", i); if (j < 0) j = sql.length; }
+    else if (c === "/" && n === "*") { j = sql.indexOf("*/", i + 2); j = j < 0 ? sql.length : j + 2; }
+    else if (c === "'" || c === '"') {
+      j = i + 1;
+      while (j < sql.length) { if (sql[j] === c) { if (sql[j + 1] === c) { j += 2; continue; } j++; break; } j++; }
+    }
+    if (j < 0) { code += c; i++; continue; }
+    flush(); out += sql.slice(i, j); i = j;
+  }
+  flush();
+  return out;
+}
+const CLAUSE_LINE = /^(SELECT( DISTINCT)?|FROM|WHERE|GROUP BY|HAVING|QUALIFY|WINDOW|ORDER BY|LIMIT|OFFSET|PARTITION BY|SET|VALUES|WITH|USING|INSERT INTO|UPDATE|DELETE FROM)$/;
+function houseStyle(sql) {
+  // het DuckDB-dialect van sql-formatter laat deze operatoren klein
+  sql = mapCode(sql, (c) => c.replace(/\b(like|ilike|glob|similar|escape|over)\b/gi, (w) => w.toUpperCase()));
+  const ind = (l) => l.length - l.trimStart().length;
+  const L = sql.split("\n");
+  // 1. "SELECT" + ingesprongen regel eronder  ->  "SELECT eerste_kolom"
+  for (let i = 0; i < L.length - 1; i++) {
+    const next = L[i + 1], k = ind(L[i]);
+    if (CLAUSE_LINE.test(L[i].trim()) && ind(next) > k && !next.trim().startsWith("--")) {
+      L[i] = L[i] + " " + next.trim(); L.splice(i + 1, 1);
+      // opent die regel een blok ("FROM (", "WITH x AS ("), dan schuift de inhoud een niveau terug:
+      // bij FROM tot en met het sluithaakje, bij WITH alle CTE's
+      if (L[i].endsWith("(")) {
+        const all = /^\s*WITH /.test(L[i]);
+        for (let j = i + 1; j < L.length && (!L[j].trim() || ind(L[j]) > k); j++) {
+          L[j] = L[j].replace(/^ {4}/, "");
+          if (!all && ind(L[j]) === k && L[j].trim().startsWith(")")) break;
+        }
+      }
+    }
+  }
+  // 2. komma aan het eind van de regel  ->  komma vooraan de volgende regel
+  for (let i = 0; i < L.length - 1; i++) {
+    const next = L[i + 1];
+    if (/,$/.test(L[i]) && !L[i].includes("--") && next.trim() && !next.trim().startsWith("--")) {
+      L[i] = L[i].slice(0, -1);
+      L[i + 1] = " ".repeat(ind(next)) + ", " + next.trim();
+    }
+  }
+  return L.join("\n");
+}
+// Waar begint de echte query? Sla witruimte en comments aan het begin over.
+function codeStart(t) {
+  let i = 0;
+  for (;;) {
+    while (i < t.length && /\s/.test(t[i])) i++;
+    if (t.startsWith("--", i)) { const j = t.indexOf("\n", i); i = j < 0 ? t.length : j + 1; continue; }
+    if (t.startsWith("/*", i)) { const j = t.indexOf("*/", i + 2); i = j < 0 ? t.length : j + 2; continue; }
+    return i;
+  }
+}
+async function formatSql() {
+  if (!cm) return;
+  let from, to;
+  if (cm.somethingSelected()) {
+    from = cm.indexFromPos(cm.getCursor("from")); to = cm.indexFromPos(cm.getCursor("to"));
+  } else {
+    const s = currentRange();
+    if (!s) return;
+    from = s.from + codeStart(s.text); to = s.from + s.text.trimEnd().length;
+    if (from >= to) return;
+  }
+  const doc = cm.getDoc(), src = doc.getValue().slice(from, to);
+  try {
+    const f = await getFormatter();
+    const out = houseStyle(f.format(src, {
+      language: "duckdb", tabWidth: 4, keywordCase: "upper", functionCase: "upper", dataTypeCase: "upper",
+      linesBetweenQueries: 1,
+    }));
+    if (doc !== cm.getDoc() || doc.getValue().slice(from, to) !== src) return;   // intussen gewijzigd: niets doen
+    cm.replaceRange(out, cm.posFromIndex(from), cm.posFromIndex(to), "+format");
+    cm.setCursor(cm.posFromIndex(from));
+    focusEditor();
+  } catch (e) {
+    show("Formatteren lukt niet: " + String(e && e.message ? e.message : e).split("\n")[0], "error");
+  }
 }
 
 /* ================================================================= DuckDB */
