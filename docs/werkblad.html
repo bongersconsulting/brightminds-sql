@@ -598,10 +598,11 @@ async function boot() {
     refreshSchema();
   } catch (e) {
     setStatus("laden mislukt", "err");
-    show("De database kon niet geladen worden.\n\n" + (e && e.message ? e.message : e) +
+    show("De database kon niet geladen worden.\n\n" + esc(e && e.message ? e.message : e) +
       "\n\nProbeer: pagina verversen · Chrome of Edge · een ander netwerk (telefoon-hotspot)." +
       (LOCAL ? "\nJe hebt dit bestand lokaal geopend; de database komt dan rechtstreeks van GitHub. Zonder internet lukt dat niet." : "") +
-      "\nLukt het niet, gebruik dan sql-workbench.com met de startregels van de startpagina.", "error");
+      '\nLukt het niet, gebruik dan sql-workbench.com met de startregels van de pagina ' +
+      '<a href="https://bongersconsulting.github.io/brightminds-sql/alternatief/" target="_blank" rel="noopener">Alternatief</a>.', "error");
   }
 }
 
