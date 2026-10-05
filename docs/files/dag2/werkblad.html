@@ -86,6 +86,7 @@
   th,td{border-bottom:1px solid #eceef1;padding:4px 10px;text-align:left;white-space:nowrap}
   th{background:#fafbfc;position:sticky;top:0;font-weight:600}
   td.null{color:#aaa;font-style:italic}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
   .meta{font-size:12.5px;color:#555;padding:7px 16px;border-bottom:1px solid #f0f1f3}
   a{color:var(--accent)}
 
@@ -482,24 +483,91 @@ async function boot() {
   }
 }
 
-/* ================================================================= uitvoeren + CSV */
-function cell(v) {
-  if (v === null || v === undefined) return null;
-  if (typeof v === "bigint") return v.toString();
-  if (v instanceof Date) return v.toISOString().slice(0, 19).replace("T", " ");
-  return String(v);
+/* ================================================================= waarden leesbaar maken
+   DuckDB levert het resultaat als Arrow-tabel. Arrow geeft sommige types "ruw" terug: DECIMAL als geheel
+   getal zonder komma (4304.37 -> 430437), DATE/TIMESTAMP als milliseconden sinds 1970, TIME als
+   microseconden en INTERVAL helemaal niet goed. Hier maken we er per kolom weer tekst van zoals DuckDB die toont. */
+const T_INT = 2, T_FLOAT = 3, T_BINARY = 4, T_DECIMAL = 7, T_DATE = 8, T_TIME = 9, T_TIMESTAMP = 10, T_INTERVAL = 11;
+const pad = (n, w = 2) => String(n).padStart(w, "0");
+const trimFrac = (f) => f.replace(/0+$/, "");
+
+function fmtDecimal(v, scale) {
+  let s = String(v);                              // ongeschaald geheel getal, bv. "-1250" bij scale 2
+  if (!scale) return s;
+  const neg = s.startsWith("-");
+  s = (neg ? s.slice(1) : s).padStart(scale + 1, "0");
+  return (neg ? "-" : "") + s.slice(0, -scale) + "." + s.slice(-scale);
 }
+function fmtTimestamp(ms, withTime) {
+  const iso = new Date(ms).toISOString();         // 2017-07-05T13:45:10.123Z
+  if (!withTime) return iso.slice(0, 10);
+  const frac = trimFrac(iso.slice(20, 23));
+  return iso.slice(0, 10) + " " + iso.slice(11, 19) + (frac ? "." + frac : "");
+}
+function fmtTime(v, unit) {                       // unit: 0 = s, 1 = ms, 2 = µs, 3 = ns
+  const us = BigInt(v) * [1000000n, 1000n, 1n, 1n][unit] / (unit === 3 ? 1000n : 1n);
+  const sec = us / 1000000n, frac = trimFrac(pad(us % 1000000n, 6));
+  return `${pad(sec / 3600n)}:${pad((sec / 60n) % 60n)}:${pad(sec % 60n)}` + (frac ? "." + frac : "");
+}
+function fmtInterval(months, days, nanos) {       // zoals DuckDB: "1 year 2 months 5 days 01:02:03.5"
+  const parts = [], plural = (n, w) => `${n} ${w}${Math.abs(n) === 1 ? "" : "s"}`;
+  const y = Math.trunc(months / 12), m = months % 12;
+  if (y) parts.push(plural(y, "year"));
+  if (m) parts.push(plural(m, "month"));
+  if (days) parts.push(plural(days, "day"));
+  if (nanos || !parts.length) {
+    const neg = nanos < 0n, us = (neg ? -nanos : nanos) / 1000n;
+    parts.push((neg ? "-" : "") + fmtTime(us, 2));
+  }
+  return parts.join(" ");
+}
+// INTERVAL lezen we rechtstreeks uit de buffer: per waarde 4 x int32 = maanden, dagen, nanoseconden (64 bit).
+function intervalColumn(vec) {
+  const out = [];
+  for (const d of vec.data) {
+    const v = d.values;
+    for (let i = 0; i < d.length; i++) {
+      if (!d.getValid(i)) { out.push(null); continue; }
+      const k = (d.offset + i) * 4;
+      const nanos = (BigInt(v[k + 3]) << 32n) | BigInt(v[k + 2] >>> 0);
+      out.push(fmtInterval(v[k], v[k + 1], nanos));
+    }
+  }
+  return out;
+}
+function formatterFor(type) {
+  switch (type.typeId) {
+    case T_DECIMAL: return (v) => fmtDecimal(v, type.scale);
+    case T_DATE: return (v) => fmtTimestamp(v, false);
+    case T_TIMESTAMP: return (v) => fmtTimestamp(v, true);
+    case T_TIME: return (v) => fmtTime(v, type.unit);
+    case T_BINARY: return (v) => Array.from(v, (b) => "\\x" + b.toString(16).toUpperCase().padStart(2, "0")).join("");
+    default: return (v) => (typeof v === "bigint" ? v.toString() : String(v));
+  }
+}
+// Per kolom een functie rij -> tekst (of null). Kolomgewijs, zodat dubbele kolomnamen (SELECT * na een JOIN) goed gaan.
+function columnReaders(table) {
+  return table.schema.fields.map((f, i) => {
+    const vec = table.getChildAt(i);
+    if (f.type.typeId === T_INTERVAL) { const col = intervalColumn(vec); return (r) => col[r]; }
+    const fmt = formatterFor(f.type);
+    return (r) => { const v = vec.get(r); return v === null || v === undefined ? null : fmt(v); };
+  });
+}
+const isNumeric = (type) => [T_INT, T_FLOAT, T_DECIMAL].includes(type.typeId);
+
+/* ================================================================= uitvoeren + CSV */
 function render(table, ms) {
-  const fields = table.schema.fields.map((f) => f.name);
-  const rows = table.toArray(), max = 1000;
-  lastResult = { fields, rows };
-  $("csv").disabled = rows.length === 0;
-  let html = `<div class="meta">${rows.length} rij(en)${rows.length > max ? `, eerste ${max} getoond` : ""} &middot; ${ms} ms</div>`;
-  html += `<table><thead><tr>${fields.map((f) => `<th>${esc(f)}</th>`).join("")}</tr></thead><tbody>`;
-  for (const row of rows.slice(0, max)) {
-    html += "<tr>" + fields.map((f) => {
-      const v = cell(row[f]);
-      return v === null ? '<td class="null">NULL</td>' : `<td>${esc(v)}</td>`;
+  const fields = table.schema.fields, n = table.numRows, max = 1000;
+  const readers = columnReaders(table), num = fields.map((f) => isNumeric(f.type));
+  lastResult = { fields: fields.map((f) => f.name), readers, num, n };
+  $("csv").disabled = n === 0;
+  let html = `<div class="meta">${n} rij(en)${n > max ? `, eerste ${max} getoond` : ""} &middot; ${ms} ms</div>`;
+  html += `<table><thead><tr>${fields.map((f, c) => `<th${num[c] ? ' class="num"' : ""}>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>`;
+  for (let r = 0; r < Math.min(n, max); r++) {
+    html += "<tr>" + readers.map((read, c) => {
+      const v = read(r);
+      return v === null ? '<td class="null">NULL</td>' : `<td${num[c] ? ' class="num"' : ""}>${esc(v)}</td>`;
     }).join("") + "</tr>";
   }
   $("out").innerHTML = html + "</tbody></table>";
@@ -523,8 +591,10 @@ function exportCsv() {
   if (!lastResult) return;
   const S = ";";
   const q = (v) => (v === null ? "" : /[";\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v);
+  // getallen met decimale komma, zodat Excel (Nederlands) ze met de puntkomma als scheiding als getal leest
+  const val = (c, r) => { const v = lastResult.readers[c](r); return v !== null && lastResult.num[c] ? v.replace(".", ",") : v; };
   const lines = [lastResult.fields.map(q).join(S)];
-  for (const row of lastResult.rows) lines.push(lastResult.fields.map((f) => q(cell(row[f]))).join(S));
+  for (let r = 0; r < lastResult.n; r++) lines.push(lastResult.fields.map((f, c) => q(val(c, r))).join(S));
   const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
