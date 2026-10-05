@@ -5,8 +5,6 @@
 -- WERKWIJZE
 --   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
 --     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
---   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
---     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
 --
 -- Stel je hebt een tabel TBL met een kolom NMBR met de waardes:
 -- (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1)

@@ -5,8 +5,6 @@
 -- WERKWIJZE
 --   - Zet je cursor IN een query en druk Ctrl+Enter (Mac: Cmd+Enter).
 --     Selecteer niet het hele bestand: dan probeert hij alles tegelijk uit te voeren.
---   - Werk je in sql-workbench.com in plaats van het werkblad? Werk daar in EEN tabblad,
---     plak een nieuwe oefening ONDER je vorige werk en ververs de pagina niet.
 --
 -- In deze oefening gebruik je window functions voor een running total (lopend totaal) en een moving average.
 --
