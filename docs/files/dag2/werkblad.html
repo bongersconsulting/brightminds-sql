@@ -32,9 +32,12 @@
   details summary{cursor:pointer;font-size:13px;padding:3px 6px;border-radius:5px;list-style:none}
   details summary::-webkit-details-marker{display:none}
   details summary::before{content:"\25B8 ";color:#888}
-  details[open] summary::before{content:"\25BE "}
+  details[open]>summary::before{content:"\25BE "}
   details summary:hover{background:#eef2f7}
   .schema{font-weight:600;color:#444;font-size:12px;margin:10px 8px 2px;padding:0 6px}
+  details.sch{margin:6px 8px 2px}
+  details.sch>summary{font-weight:600;color:#444;font-size:12.5px}
+  details.sch>details{margin-left:12px;margin-right:0}
   .cols{font-family:Consolas,Menlo,monospace;font-size:11.5px;color:#555;padding:2px 6px 6px 22px;line-height:1.55}
   .cols span{cursor:pointer}.cols span:hover{color:var(--accent)}
   .pane{flex:1;display:flex;flex-direction:column;min-width:0}
@@ -531,6 +534,7 @@ function exportCsv() {
 }
 
 /* ================================================================= tabellen links */
+const schemaOpen = new Map(), tableOpen = new Set();
 async function refreshSchema() {
   if (!conn) return;
   try {
@@ -547,18 +551,24 @@ async function refreshSchema() {
     }
     const el = $("schema"); el.innerHTML = "";
     for (const [schema, tables] of bySchema) {
-      const h = document.createElement("div"); h.className = "schema";
-      h.textContent = schema === "main" ? "eigen tabellen" : schema;
-      el.appendChild(h);
+      // schema's zijn in- en uitklapbaar en staan standaard dicht; eigen tabellen staan open.
+      // Wat open stond blijft open als de lijst ververst (bijv. na een CREATE TABLE).
+      const sch = document.createElement("details"); sch.className = "sch";
+      sch.open = schemaOpen.has(schema) ? schemaOpen.get(schema) : schema === "main";
+      sch.innerHTML = `<summary>${esc(schema === "main" ? "eigen tabellen" : schema)}</summary>`;
+      sch.addEventListener("toggle", () => schemaOpen.set(schema, sch.open));
       for (const tb of tables) {
         const d = document.createElement("details");
         const name = (schema === "main" ? "" : schema + ".") + tb.t;
+        d.open = tableOpen.has(name);
         d.innerHTML = `<summary>${esc(tb.t)}</summary><div class="cols">${tb.cols.map((c) => `<span>${esc(c)}</span>`).join("<br>")}</div>`;
+        d.addEventListener("toggle", () => { if (d.open) tableOpen.add(name); else tableOpen.delete(name); });
         d.querySelector("summary").addEventListener("dblclick", () => insertAtCursor(name));
         d.querySelectorAll(".cols span").forEach((sp) =>
           sp.addEventListener("click", () => insertAtCursor(sp.textContent.split("  ")[0])));
-        el.appendChild(d);
+        sch.appendChild(d);
       }
+      el.appendChild(sch);
     }
   } catch (e) { /* schemalijst is bijzaak */ }
 }
