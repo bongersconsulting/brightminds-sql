@@ -260,6 +260,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/keymap/sublime.min.js"></script>
 <script type="module">
 const LOCAL = location.protocol === "file:";
 const DB_FILE = "files/brightminds_sql.duckdb";
@@ -380,6 +382,16 @@ function initEditor() {
         "Ctrl-/": (c) => c.toggleComment(), "Cmd-/": (c) => c.toggleComment(),
         "Shift-Ctrl-E": explainPlan, "Shift-Cmd-E": explainPlan,
         "Shift-Ctrl-F": formatSql, "Shift-Cmd-F": formatSql,
+        // meerdere cursors (commando's uit keymap/sublime); Esc gaat terug naar één cursor
+        "Ctrl-Alt-Up": "addCursorToPrevLine", "Ctrl-Alt-Down": "addCursorToNextLine",
+        "Cmd-Alt-Up": "addCursorToPrevLine", "Cmd-Alt-Down": "addCursorToNextLine",
+        "Ctrl-D": "selectNextOccurrence", "Cmd-D": "selectNextOccurrence",
+      },
+      // Alt+klik zet er een cursor bij (Ctrl/Cmd+klik blijft ook werken); Alt+Shift+slepen selecteert een blok
+      configureMouse: (c, repeat, e) => {
+        if (!e.altKey) return {};
+        if (e.shiftKey) return { unit: "rectangle", extend: false };
+        return { addNew: true, unit: repeat === "double" ? "word" : repeat === "triple" ? "line" : "char" };
       },
     });
     cm.setValue(start);
