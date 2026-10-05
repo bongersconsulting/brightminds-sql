@@ -12,5 +12,7 @@ Volgorde:
   5. Los de moord op (zie de casusbeschrijving).
 
 Tip: de data-bestanden zijn groot. Sleep een .sql-bestand in het werkblad: hij opent dan in een eigen
-     tabblad. Zet je cursor in het statement en druk Ctrl+Enter.
+     tabblad. De bestanden bevatten veel statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk
+     Ctrl+Enter. Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+     Een groot bestand kan even duren; rechtsboven staat dan 'bezig met uitvoeren…'.
 Ververs je de pagina, dan zijn je tabellen weg; bewaar je eigen DDL-statements in een tekstbestand.

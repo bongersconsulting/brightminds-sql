@@ -1,3 +1,6 @@
+-- Dit bestand bevat 19 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO get_fit_now_member (id,person_id,name,membership_start_date,membership_status) VALUES
 	 ('NL318',65076,'Everette Koepke',20170926,'gold'),
 	 ('AOE21',39426,'Noe Locascio',20171005,'regular'),

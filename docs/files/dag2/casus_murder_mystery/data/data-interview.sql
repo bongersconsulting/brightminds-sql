@@ -1,3 +1,6 @@
+-- Dit bestand bevat 500 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO interview (person_id,transcript) VALUES
 	 (28508,'‘I deny it!’ said the March Hare.
 '),

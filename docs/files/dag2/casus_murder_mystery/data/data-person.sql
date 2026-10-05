@@ -1,3 +1,6 @@
+-- Dit bestand bevat 1002 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO person (id,name,license_id,address_number,address_street_name,ssn) VALUES
 	 (10000,'Christoper Peteuil',993845,624,'Bankhall Ave','747714076'),
 	 (10007,'Kourtney Calderwood',861794,2791,'Gustavus Blvd','477972044'),

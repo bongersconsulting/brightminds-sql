@@ -1,4 +1,5 @@
--- Voer onderstaande query uit en controleer of er geen 'INCORRECT' staat in de kolom check_table_count.
+-- Dit bestand bevat meerdere statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Controleer daarna of er geen 'INCORRECT' staat in de kolom check_table_count.
 
 UPDATE ddl_check SET table_count = 1228  WHERE table_name = 'crime_scene_report';
 UPDATE ddl_check SET table_count = 10007 WHERE table_name = 'drivers_license';

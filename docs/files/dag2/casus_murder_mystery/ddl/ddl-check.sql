@@ -1,4 +1,5 @@
--- Voer onderstaande query uit en controleer of er geen 'INCORRECT' staat in de kolom check_table_availability.
+-- Dit bestand bevat meerdere statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Controleer daarna of er geen 'INCORRECT' staat in de kolom check_table_availability.
 
 CREATE OR REPLACE TABLE ddl_check (table_name VARCHAR, table_count INTEGER);
 

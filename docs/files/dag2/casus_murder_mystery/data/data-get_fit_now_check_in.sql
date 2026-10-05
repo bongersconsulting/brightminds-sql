@@ -1,3 +1,6 @@
+-- Dit bestand bevat 271 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO get_fit_now_check_in (membership_id,check_in_date,check_in_time,check_out_time) VALUES
 	 ('NL318',20180212,329,365),
 	 ('NL318',20170811,469,920),

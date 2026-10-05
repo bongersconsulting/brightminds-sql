@@ -1,3 +1,6 @@
+-- Dit bestand bevat 1001 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO drivers_license (id,age,height,eye_color,hair_color,gender,plate_number,car_make,car_model) VALUES
 	 (100280,72,57,'brown','red','male','P24L4U','Acura','MDX'),
 	 (100460,63,72,'brown','brown','female','XF02T6','Cadillac','SRX'),

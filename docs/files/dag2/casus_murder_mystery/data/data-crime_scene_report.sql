@@ -1,3 +1,6 @@
+-- Dit bestand bevat 123 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO crime_scene_report (date,"type",description,city) VALUES
 	 (20180115,'robbery','A Man Dressed as Spider-Man Is on a Robbery Spree','NYC'),
 	 (20180115,'murder','Life? Dont talk to me about life.','Albany'),

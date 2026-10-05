@@ -1,3 +1,6 @@
+-- Dit bestand bevat 21 INSERT-statements: selecteer alles (Ctrl+A, Mac: Cmd+A) en druk Ctrl+Enter.
+-- Alleen Ctrl+Enter voert maar één statement uit (het statement waar je cursor in staat).
+
 INSERT INTO facebook_event_checkin (person_id,event_id,event_name,date) VALUES
 	 (28508,5880,'Nudists are people who wear one-button suits.
 ',20170913),
