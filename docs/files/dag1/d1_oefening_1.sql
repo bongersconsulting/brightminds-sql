@@ -19,7 +19,7 @@
 --
 -- Opdracht 1d: schrijf een query die alleen de voornaam (FirstName) van alle klanten laat zien.
 --
--- Opdracht 1e: hoeveel rijen heeft SalesLT.Customer? (tip: rechtsonder bij het resultaat staat het aantal rijen;
+-- Opdracht 1e: hoeveel rijen heeft SalesLT.Customer? (tip: linksboven het resultaat staat het aantal rijen;
 --              of gebruik SELECT COUNT(*) ...)
 
 SELECT *
