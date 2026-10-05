@@ -2,16 +2,15 @@
 -- d1_oefening_7 - SQL schrijven met een LLM: laten schrijven, zelf controleren
 -- ==========================================================================
 --
--- Werkwijze (tweetallen, 12 minuten):
---     1. Benoem samen de GRAIN van het antwoord: "1 rij per ...".
---     2. Persoon A: vul het prompt-sjabloon hieronder aan en stuur het naar een LLM (ChatGPT, Claude, Copilot, ...).
---        Persoon B schrijft ONDERTUSSEN drie checks op:
+-- Werkwijze (tweetallen):
+--     1. Bedenk samen:
 --           - hoeveel rijen verwacht je?
 --           - één bedrijf waarvan je het antwoord kunt narekenen
 --           - welke join kan rijen vermenigvuldigen?
---     3. Plak de query hieronder, draai hem, draai je checks. Klopt het?
+--     2. Vul het prompt-sjabloon hieronder aan en stuur het naar een LLM (ChatGPT, Claude, Copilot, ...).
+--     3. Plak de query van het LLM hieronder, draai hem, draai je checks. Klopt het?
 --     4. Niet? Fix het zelf (of laat het model fixen, maar snap de fix).
---     Geen LLM bij de hand? Persoon B schrijft de query zelf; persoon A speelt reviewer.
+--     Geen LLM bij de hand? Persoon A schrijft de query zelf; persoon B speelt reviewer.
 --
 -- Vraag A: geef per bedrijf (CompanyName) het aantal orders en de totale orderwaarde (TotalDue).
 --          1 rij per bedrijf. Sorteer op orderwaarde aflopend.
@@ -32,7 +31,7 @@
 --   SalesLT.Product(ProductID PK, Name, ProductModelID FK->ProductModel, ListPrice, StandardCost)
 --   SalesLT.ProductModel(ProductModelID PK, Name)
 --
--- Vraag: [VRAAG A of B]. Grain: 1 rij per [...].
+-- Vraag: [VRAAG A of B].
 -- Stijl: keywords in hoofdletters, komma's vóór de kolomnaam, elke clause op een nieuwe regel,
 -- aliases voor tabellen en berekende kolommen, WHERE 1=1 gevolgd door AND-filters.
 -- Noem je aannames expliciet. Geef daarna een aparte controle-query voor het aantal rijen of het totaal.
