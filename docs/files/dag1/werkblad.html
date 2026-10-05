@@ -83,6 +83,7 @@
   #msg{padding:11px 16px;font-size:13px}
   #msg.error{color:var(--err);font-family:Consolas,monospace;white-space:pre-wrap}
   #msg.okmsg{color:var(--ok)}
+  #msg .ms{color:#888;margin-left:6px}
   table{border-collapse:collapse;width:100%;font-size:12.5px}
   th,td{border-bottom:1px solid #eceef1;padding:4px 10px;text-align:left;white-space:nowrap}
   th{background:#fafbfc;position:sticky;top:0;font-weight:600}
@@ -378,6 +379,9 @@ function initEditor() {
   if (window.CodeMirror) {
     cm = CodeMirror.fromTextArea($("fallback"), {
       mode: "text/x-sql", lineNumbers: true, lineWrapping: true, indentUnit: 4,
+      // contenteditable i.p.v. de verborgen textarea: anders kopieert CodeMirror bij elke actie de hele
+      // selectie naar die textarea, en "alles selecteren" in een groot databestand bevriest de pagina
+      inputStyle: "contenteditable",
       extraKeys: {
         "Ctrl-Enter": run, "Cmd-Enter": run,
         "Ctrl-/": (c) => c.toggleComment(), "Cmd-/": (c) => c.toggleComment(),
@@ -695,20 +699,49 @@ function render(table, ms) {
   }
   $("out").innerHTML = html + "</tbody></table>";
 }
+// CREATE / INSERT / UPDATE / DELETE / DROP geven in DuckDB een tabelletje "Count" of "Success" terug.
+// Dat tonen we als zin: "Tabel aangemaakt met 440 rijen", "3 rijen toegevoegd", ...
+const WHAT = { table: "Tabel", view: "View", index: "Index", "unique index": "Index", schema: "Schema", sequence: "Sequence", macro: "Macro", type: "Type" };
+function statementMessage(sql, table) {
+  const f = table.schema.fields;
+  if (f.length !== 1 || !["Count", "Success"].includes(f[0].name)) return null;
+  const m = /^(create|insert|update|delete|drop|alter)\b(?:\s+or\s+replace)?(?:\s+(?:temp|temporary))?(?:\s+(unique index|table|view|index|schema|sequence|macro|type))?/i
+    .exec(sql.slice(codeStart(sql)));
+  if (!m) return f[0].name === "Success" ? "Uitgevoerd." : null;
+  const verb = m[1].toLowerCase(), what = WHAT[(m[2] || "").toLowerCase()] || "Object";
+  const n = f[0].name === "Count" && table.numRows ? Number(table.getChildAt(0).get(0)) : null;
+  const rows = (k) => `${k} ${k === 1 ? "rij" : "rijen"}`;
+  switch (verb) {
+    case "create": return `${what} aangemaakt` + (n !== null && what === "Tabel" ? ` met ${rows(n)}` : "") + ".";
+    case "insert": return `${rows(n || 0)} toegevoegd.`;
+    case "update": return `${rows(n || 0)} gewijzigd.`;
+    case "delete": return `${rows(n || 0)} verwijderd.`;
+    case "drop": return `${what} verwijderd.`;
+    default: return `${what} aangepast.`;
+  }
+}
 async function run() {
   if (!conn) return;
   const sql = currentStatement().trim();
   if (!sql) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
   $("run").disabled = true;
+  // laten zien dat hij bezig is; bij een snelle query flitst er niets
+  setStatus("bezig met uitvoeren…");
+  const busy = setTimeout(() => show("Bezig met uitvoeren… (grote bestanden kunnen even duren)"), 400);
   try {
     const t0 = performance.now();
     const res = await conn.query(sql);
     const ms = Math.round(performance.now() - t0);
-    if (res.schema.fields.length === 0) { show(`Uitgevoerd in ${ms} ms.`, "okmsg"); lastResult = null; $("csv").disabled = true; }
+    const msg = res.schema.fields.length === 0 ? "Uitgevoerd." : statementMessage(sql, res);
+    if (msg) { show(`${esc(msg)} <span class="ms">${ms} ms</span>`, "okmsg"); lastResult = null; $("csv").disabled = true; }
     else render(res, ms);
     if (/\b(create|drop|alter|insert|delete|update|attach|detach)\b/i.test(sql)) refreshSchema();
-  } catch (e) { show(e && e.message ? e.message : String(e), "error"); }
-  finally { $("run").disabled = false; }
+  } catch (e) { show(esc(e && e.message ? e.message : String(e)), "error"); }
+  finally {
+    clearTimeout(busy);
+    setStatus("klaar · database geladen", "ok");
+    $("run").disabled = false;
+  }
 }
 function exportCsv() {
   if (!lastResult) return;
