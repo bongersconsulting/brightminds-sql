@@ -9,7 +9,7 @@
 -- Een regel die begint met -- is een comment: die wordt niet uitgevoerd. Zo staat de uitleg in elk
 -- oefenbestand, en zo zet je zelf een stuk query tijdelijk uit (Ctrl + / zet de -- aan en uit).
 --
--- Opdracht 1a: links in het werkblad zie je de schema's SalesLT, ecodrive en dbo met hun tabellen.
+-- Opdracht 1a: links in het werkblad zie je de schema's SalesLT, dbo en ecodrive met hun tabellen.
 --              Klap SalesLT open. Welke tabellen zie je? Klik op Customer: welke kolommen heeft die tabel?
 --
 -- Opdracht 1b: zet je cursor in de query hieronder en druk Ctrl+Enter (Mac: Cmd+Enter). Je ziet 100 rijen.
