@@ -38,6 +38,8 @@
   details.sch{margin:6px 8px 2px}
   details.sch>summary{font-weight:600;color:#444;font-size:12.5px}
   details.sch>details{margin-left:12px;margin-right:0}
+  summary .kind{font-size:11px;color:#888;font-style:italic}
+  .meta code,#msg code{font-family:Consolas,Menlo,monospace;font-size:12px;background:#f3f4f6;padding:1px 4px;border-radius:4px}
   .cols{font-family:Consolas,Menlo,monospace;font-size:11.5px;color:#555;padding:2px 6px 6px 22px;line-height:1.55}
   .cols span{cursor:pointer}.cols span:hover{color:var(--accent)}
   .pane{flex:1;display:flex;flex-direction:column;min-width:0}
@@ -468,8 +470,8 @@ function getFormatter() {
   });
   return formatterP;
 }
-// Past fn toe op de stukken SQL buiten strings, "identifiers" en comments.
-function mapCode(sql, fn) {
+// Past fn toe op de stukken SQL buiten strings, "identifiers" en comments (en other op die stukken zelf).
+function mapCode(sql, fn, other = (x) => x) {
   let out = "", code = "", i = 0;
   const flush = () => { out += fn(code); code = ""; };
   while (i < sql.length) {
@@ -482,7 +484,7 @@ function mapCode(sql, fn) {
       while (j < sql.length) { if (sql[j] === c) { if (sql[j + 1] === c) { j += 2; continue; } j++; break; } j++; }
     }
     if (j < 0) { code += c; i++; continue; }
-    flush(); out += sql.slice(i, j); i = j;
+    flush(); out += other(sql.slice(i, j)); i = j;
   }
   flush();
   return out;
@@ -554,6 +556,37 @@ async function formatSql() {
   } catch (e) {
     show("Formatteren lukt niet: " + String(e && e.message ? e.message : e).split("\n")[0], "error");
   }
+}
+
+/* ================================================================= T-SQL-gewoontes
+   In SQL Server maak je een tijdelijke tabel met  SELECT ... INTO #naam FROM ...  DuckDB kent geen # in
+   namen en geen SELECT INTO. Daarom zetten we vóór het uitvoeren:
+     #naam                        ->  "#naam"   (een geldige naam tussen dubbele quotes)
+     SELECT ... INTO #naam FROM   ->  CREATE TEMP TABLE "#naam" AS SELECT ... FROM
+     SELECT ... INTO naam FROM    ->  CREATE TABLE naam AS SELECT ... FROM
+   Zo werken ook  SELECT * FROM #naam  en  DROP TABLE #naam. */
+const HASH_NAME = /(^|[^\w"#.])(#{1,2}[A-Za-z_]\w*)/g;
+const IDENT = String.raw`(?:"[^"]*"|[\w#]+)`;
+const INTO_TARGET = new RegExp(String.raw`^INTO\s+(${IDENT}(?:\.${IDENT})*)`, "i");
+function tsqlCompat(sql) {
+  let out = mapCode(sql, (c) => c.replace(HASH_NAME, '$1"$2"'));
+  const masked = mapCode(out, (c) => c, (x) => " ".repeat(x.length));   // strings en comments leeg
+  const start = codeStart(out);
+  if (!/^SELECT\b/i.test(masked.slice(start))) return { sql: out, note: "" };
+  for (let i = start, depth = 0; i < masked.length; i++) {
+    const ch = masked[i];
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (depth === 0 && /\s/.test(masked[i - 1]) && /^INTO\s/i.test(masked.slice(i, i + 5))) {
+      const m = INTO_TARGET.exec(out.slice(i));
+      if (!m) break;
+      const head = `CREATE ${m[1].startsWith('"#') ? "TEMP " : ""}TABLE ${m[1]} AS `;
+      out = out.slice(0, start) + head + out.slice(start, i) + out.slice(i + m[0].length);
+      const preview = out.slice(start).replace(/\s+/g, " ").trim();
+      return { sql: out, note: preview.length > 140 ? preview.slice(0, 140) + "…" : preview };
+    }
+  }
+  return { sql: out, note: "" };
 }
 
 /* ================================================================= DuckDB */
@@ -678,12 +711,13 @@ function columnReaders(table) {
 const isNumeric = (type) => [T_INT, T_FLOAT, T_DECIMAL].includes(type.typeId);
 
 /* ================================================================= uitvoeren + CSV */
-function render(table, ms) {
+function render(table, ms, note) {
   const fields = table.schema.fields, n = table.numRows, max = 1000;
   const readers = columnReaders(table), num = fields.map((f) => isNumeric(f.type));
   lastResult = { fields: fields.map((f) => f.name), readers, num, n };
   $("csv").disabled = n === 0;
-  let html = `<div class="meta">${n} rij(en)${n > max ? `, eerste ${max} getoond` : ""} &middot; ${ms} ms</div>`;
+  let html = note ? `<div class="meta">${noteHtml(note)}</div>` : "";
+  html += `<div class="meta">${n} rij(en)${n > max ? `, eerste ${max} getoond` : ""} &middot; ${ms} ms</div>`;
   html += `<table><thead><tr>${fields.map((f, c) => `<th${num[c] ? ' class="num"' : ""}>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>`;
   for (let r = 0; r < Math.min(n, max); r++) {
     html += "<tr>" + readers.map((read, c) => {
@@ -693,17 +727,19 @@ function render(table, ms) {
   }
   $("out").innerHTML = html + "</tbody></table>";
 }
+const noteHtml = (note) => `Omgezet naar DuckDB: <code>${esc(note)}</code>`;
 async function run() {
   if (!conn) return;
-  const sql = currentStatement().trim();
-  if (!sql) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
+  const typed = currentStatement().trim();
+  if (!typed) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
+  const { sql, note } = tsqlCompat(typed);
   $("run").disabled = true;
   try {
     const t0 = performance.now();
     const res = await conn.query(sql);
     const ms = Math.round(performance.now() - t0);
-    if (res.schema.fields.length === 0) { show(`Uitgevoerd in ${ms} ms.`, "okmsg"); lastResult = null; $("csv").disabled = true; }
-    else render(res, ms);
+    if (res.schema.fields.length === 0) { show(`Uitgevoerd in ${ms} ms.` + (note ? "<br>" + noteHtml(note) : ""), "okmsg"); lastResult = null; $("csv").disabled = true; }
+    else render(res, ms, note);
     if (/\b(create|drop|alter|insert|delete|update|attach|detach)\b/i.test(sql)) refreshSchema();
   } catch (e) { show(e && e.message ? e.message : String(e), "error"); }
   finally { $("run").disabled = false; }
@@ -730,15 +766,18 @@ async function refreshSchema() {
   if (!conn) return;
   try {
     const r = await conn.query(`
-      SELECT table_schema AS s, table_name AS t,
-             string_agg(column_name || '  ' || data_type, '|' ORDER BY ordinal_position) AS cols
-      FROM information_schema.columns
-      WHERE table_schema NOT IN ('information_schema','pg_catalog')
+      SELECT C.table_schema AS s, C.table_name AS t, T.table_type AS ty,
+             string_agg(C.column_name || '  ' || C.data_type, '|' ORDER BY C.ordinal_position) AS cols
+      FROM information_schema.columns AS C
+      LEFT JOIN information_schema.tables AS T
+          ON T.table_catalog = C.table_catalog AND T.table_schema = C.table_schema AND T.table_name = C.table_name
+      WHERE C.table_schema NOT IN ('information_schema','pg_catalog')
       GROUP BY ALL ORDER BY 1, 2`);
     const bySchema = new Map();
     for (const row of r.toArray()) {
       if (!bySchema.has(row.s)) bySchema.set(row.s, []);
-      bySchema.get(row.s).push({ t: row.t, cols: String(row.cols).split("|") });
+      const kind = row.ty === "VIEW" ? "view" : /TEMPORARY/.test(row.ty || "") ? "tijdelijk" : "";
+      bySchema.get(row.s).push({ t: row.t, kind, cols: String(row.cols).split("|") });
     }
     const el = $("schema"); el.innerHTML = "";
     for (const [schema, tables] of bySchema) {
@@ -752,7 +791,7 @@ async function refreshSchema() {
         const d = document.createElement("details");
         const name = (schema === "main" ? "" : schema + ".") + tb.t;
         d.open = tableOpen.has(name);
-        d.innerHTML = `<summary>${esc(tb.t)}</summary><div class="cols">${tb.cols.map((c) => `<span>${esc(c)}</span>`).join("<br>")}</div>`;
+        d.innerHTML = `<summary>${esc(tb.t)}${tb.kind ? ` <span class="kind">${tb.kind}</span>` : ""}</summary><div class="cols">${tb.cols.map((c) => `<span>${esc(c)}</span>`).join("<br>")}</div>`;
         d.addEventListener("toggle", () => { if (d.open) tableOpen.add(name); else tableOpen.delete(name); });
         d.querySelector("summary").addEventListener("dblclick", () => insertAtCursor(name));
         d.querySelectorAll(".cols span").forEach((sp) =>
@@ -894,7 +933,7 @@ async function explainPlan() {
   if (!sql) { show("Geen query gevonden: zet je cursor in een query.", "error"); return; }
   openModal("Uitvoeringsplan", "Klik op een blok voor de details. Onderaan begint de query (scans), bovenaan komt het resultaat eruit.", true);
   try {
-    const res = await conn.query("EXPLAIN (FORMAT json) " + sql);
+    const res = await conn.query("EXPLAIN (FORMAT json) " + tsqlCompat(sql).sql);
     const row = res.toArray()[0];
     const raw = row.explain_value !== undefined ? row.explain_value : row[res.schema.fields[res.schema.fields.length - 1].name];
     let j = JSON.parse(String(raw));
