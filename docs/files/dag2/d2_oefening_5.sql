@@ -3,6 +3,7 @@
 -- ==========================================================================
 --
 -- In deze oefening ga je oefenen met datumfuncties (tabel bikeshare uit oefening 2).
+-- Heb je de pagina intussen ververst? Draai dan eerst opdracht 2a opnieuw.
 --     date_diff('day', a, b)     verschil tussen a en b in dagen ('second', 'minute', 'month', 'year' kan ook)
 --     year(d) / month(d) / day(d)   onderdelen van een datum
 --     date_trunc('month', d)     afronden naar het begin van de maand
@@ -15,10 +16,11 @@
 -- Opdracht 5b: geef start_time en de kolommen jaar, maand en dag.
 --
 -- Opdracht 5c: maak de tabel ledger_months aan (hieronder) en sorteer de rijen in kalendervolgorde
---              (tip: CASE WHEN op left(Month, 3), of strptime).
+--              (tip: CASE WHEN op left(Month, 3), of strptime). Let op: strptime kent alleen Engelse
+--              maandnamen (Mar, May). Wat gebeurt er met 'Mrt 2024' en 'Mei 2024', en hoe los je dat op?
 --
 -- Bonus:       geef start_terminal en duration_seconds en een kolom difference: het verschil met de vorige rit
---              (op duration_seconds gesorteerd), per start_terminal (tip: window functie LAG).
+--              (op duration_seconds gesorteerd), per start_terminal (tip: window function LAG).
 
 CREATE OR REPLACE TABLE ledger_months (
     EntryNo INTEGER

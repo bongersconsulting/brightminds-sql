@@ -4,16 +4,19 @@
 --
 -- In deze oefening gebruik je window functions voor een running total (lopend totaal) en een moving average.
 --
--- Opdracht 2a: maak de tabel bikeshare aan met de query hieronder.
+-- Opdracht 2a: maak de tabel bikeshare aan met de drie statements hieronder (CREATE TABLE, INSERT en SELECT).
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 2b: schrijf een SELECT query met de kolommen start_time, bike_id_nr en duration_seconds
+-- Opdracht 2b: schrijf een SELECT-query met de kolommen start_time, bike_id_nr en duration_seconds
 --              en een kolom running_total: de cumulatieve som van duration_seconds, in volgorde van start_time.
 --              Kijk goed naar de output. Klopt elke rij? (Tip: er zijn ritten met precies dezelfde start_time.)
 --
--- Opdracht 2c: schrijf een SELECT query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van de
---              3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).
+-- Opdracht 2c: schrijf een SELECT-query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van
+--              duration_seconds over de 3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).
 --
--- Bonus:       wat gebeurt er als je in 2b alleen ORDER BY start_time gebruikt, zonder ROWS BETWEEN ...? Waarom?
+-- Bonus:       los het probleem uit 2b op, zodat elke rit een eigen running total krijgt
+--              (tip: ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, plus een tweede sorteerkolom als tiebreaker).
+--              Waarom heb je allebei nodig?
 
 CREATE OR REPLACE TABLE bikeshare (
     duration_seconds INTEGER

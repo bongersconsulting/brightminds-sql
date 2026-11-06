@@ -50,18 +50,19 @@ nav.sub{font-size:13px;padding:10px 0}
 --
 -- In deze oefening ga je oefenen met window functions.
 -- Je maakt zelf een tabel aan. Die komt in dezelfde database als SalesLT en ecodrive, in het geheugen van je browser.
--- Ververs je de pagina, dan is de tabel weg: de CREATE TABLE hieronder opnieuw uitvoeren. Je tekst in het
--- werkblad blijft wel bewaard.
+-- Ververs je de pagina, dan is de tabel weg en moet je de statements hieronder opnieuw uitvoeren.
+-- Je tekst in het werkblad blijft wel bewaard.
 --
--- Opdracht 1a: maak de tabel student_score aan met de query hieronder.
+-- Opdracht 1a: maak de tabel student_score aan met de drie statements hieronder (CREATE TABLE, INSERT en SELECT).
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 1b: schrijf een SELECT query met alle kolommen plus een kolom maximum_score en een kolom minimum_score
+-- Opdracht 1b: schrijf een SELECT-query met alle kolommen plus een kolom maximum_score en een kolom minimum_score
 --              met de hoogste en laagste score over alle rijen (tip: gebruik alleen OVER (), geen PARTITION BY).
 --
--- Opdracht 1c: schrijf een SELECT query met een kolom dep_maximum_score en dep_average_score:
---              de hoogste en de gemiddelde score per departement (tip: OVER (PARTITION BY ...)).
+-- Opdracht 1c: schrijf een SELECT-query met een kolom dep_maximum_score en dep_average_score:
+--              de hoogste en de gemiddelde score per departement (dep_name) (tip: OVER (PARTITION BY ...)).
 --
--- Opdracht 1d: schrijf een SELECT query met een kolom score_rank die de studenten rangschikt op score,
+-- Opdracht 1d: schrijf een SELECT-query met een kolom score_rank die de studenten rangschikt op score,
 --              per departement (tip: RANK() OVER (PARTITION BY ... ORDER BY ...)).
 --
 -- Opdracht 1e: gebruik DENSE_RANK in plaats van RANK in de query van 1d. Wat is het verschil in de output?
@@ -100,16 +101,19 @@ ORDER BY score;
 --
 -- In deze oefening gebruik je window functions voor een running total (lopend totaal) en een moving average.
 --
--- Opdracht 2a: maak de tabel bikeshare aan met de query hieronder.
+-- Opdracht 2a: maak de tabel bikeshare aan met de drie statements hieronder (CREATE TABLE, INSERT en SELECT).
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 2b: schrijf een SELECT query met de kolommen start_time, bike_id_nr en duration_seconds
+-- Opdracht 2b: schrijf een SELECT-query met de kolommen start_time, bike_id_nr en duration_seconds
 --              en een kolom running_total: de cumulatieve som van duration_seconds, in volgorde van start_time.
 --              Kijk goed naar de output. Klopt elke rij? (Tip: er zijn ritten met precies dezelfde start_time.)
 --
--- Opdracht 2c: schrijf een SELECT query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van de
---              3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).
+-- Opdracht 2c: schrijf een SELECT-query met dezelfde kolommen en een kolom moving_avg: het gemiddelde van
+--              duration_seconds over de 3 meest recente ritten (tip: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).
 --
--- Bonus:       wat gebeurt er als je in 2b alleen ORDER BY start_time gebruikt, zonder ROWS BETWEEN ...? Waarom?
+-- Bonus:       los het probleem uit 2b op, zodat elke rit een eigen running total krijgt
+--              (tip: ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, plus een tweede sorteerkolom als tiebreaker).
+--              Waarom heb je allebei nodig?
 
 CREATE OR REPLACE TABLE bikeshare (
     duration_seconds INTEGER
@@ -144,9 +148,10 @@ ORDER BY start_time
 -- Stel je hebt een tabel TBL met een kolom NMBR met de waardes:
 -- (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1)
 --
--- Opdracht 3a: maak de tabel TBL aan met de query hieronder, precies zoals hij er staat.
+-- Opdracht 3a: maak de tabel TBL aan met de drie statements hieronder, precies zoals ze er staan.
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 3b: schrijf een SELECT query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).
+-- Opdracht 3b: schrijf een SELECT-query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).
 --              Je krijgt een foutmelding. Lees hem goed: waarom weigert DuckDB dit?
 --              Welk datatype had de kolom moeten hebben? Pas de tabel aan (ALTER TABLE ... ALTER COLUMN ... TYPE ...)
 --              en probeer opnieuw.
@@ -169,7 +174,7 @@ FROM TBL;
 -- d2_oefening_4 - Strings
 -- ==========================================================================
 --
--- In deze oefening ga je oefenen met string-functies (tekst).
+-- In deze oefening ga je oefenen met stringfuncties (tekst).
 --     length(s)            lengte              lower(s) / upper(s)     kleine / hoofdletters
 --     left(s, n)           eerste n tekens     substring(s, start, n)  deel van een string (start telt vanaf 1)
 --     strpos(s, zoek)      positie van zoek in s (0 = niet gevonden)   concat(a, b, ...) of a || b   samenvoegen
@@ -193,6 +198,7 @@ FROM TBL;
 -- ==========================================================================
 --
 -- In deze oefening ga je oefenen met datumfuncties (tabel bikeshare uit oefening 2).
+-- Heb je de pagina intussen ververst? Draai dan eerst opdracht 2a opnieuw.
 --     date_diff(&#x27;day&#x27;, a, b)     verschil tussen a en b in dagen (&#x27;second&#x27;, &#x27;minute&#x27;, &#x27;month&#x27;, &#x27;year&#x27; kan ook)
 --     year(d) / month(d) / day(d)   onderdelen van een datum
 --     date_trunc(&#x27;month&#x27;, d)     afronden naar het begin van de maand
@@ -205,10 +211,11 @@ FROM TBL;
 -- Opdracht 5b: geef start_time en de kolommen jaar, maand en dag.
 --
 -- Opdracht 5c: maak de tabel ledger_months aan (hieronder) en sorteer de rijen in kalendervolgorde
---              (tip: CASE WHEN op left(Month, 3), of strptime).
+--              (tip: CASE WHEN op left(Month, 3), of strptime). Let op: strptime kent alleen Engelse
+--              maandnamen (Mar, May). Wat gebeurt er met &#x27;Mrt 2024&#x27; en &#x27;Mei 2024&#x27;, en hoe los je dat op?
 --
 -- Bonus:       geef start_terminal en duration_seconds en een kolom difference: het verschil met de vorige rit
---              (op duration_seconds gesorteerd), per start_terminal (tip: window functie LAG).
+--              (op duration_seconds gesorteerd), per start_terminal (tip: window function LAG).
 
 CREATE OR REPLACE TABLE ledger_months (
     EntryNo INTEGER

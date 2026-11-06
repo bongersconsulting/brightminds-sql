@@ -5,9 +5,10 @@
 -- Stel je hebt een tabel TBL met een kolom NMBR met de waardes:
 -- (1), (0), (0), (1), (1), (1), (1), (0), (0), (1), (0), (1), (0), (1), (0), (1)
 --
--- Opdracht 3a: maak de tabel TBL aan met de query hieronder, precies zoals hij er staat.
+-- Opdracht 3a: maak de tabel TBL aan met de drie statements hieronder, precies zoals ze er staan.
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 3b: schrijf een SELECT query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).
+-- Opdracht 3b: schrijf een SELECT-query die bij elke 0 het getal 2 optelt en bij elke 1 het getal 3 (tip: CASE WHEN).
 --              Je krijgt een foutmelding. Lees hem goed: waarom weigert DuckDB dit?
 --              Welk datatype had de kolom moeten hebben? Pas de tabel aan (ALTER TABLE ... ALTER COLUMN ... TYPE ...)
 --              en probeer opnieuw.

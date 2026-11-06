@@ -2,7 +2,7 @@
 -- d2_oefening_4 - Strings
 -- ==========================================================================
 --
--- In deze oefening ga je oefenen met string-functies (tekst).
+-- In deze oefening ga je oefenen met stringfuncties (tekst).
 --     length(s)            lengte              lower(s) / upper(s)     kleine / hoofdletters
 --     left(s, n)           eerste n tekens     substring(s, start, n)  deel van een string (start telt vanaf 1)
 --     strpos(s, zoek)      positie van zoek in s (0 = niet gevonden)   concat(a, b, ...) of a || b   samenvoegen

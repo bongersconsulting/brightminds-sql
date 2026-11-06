@@ -4,18 +4,19 @@
 --
 -- In deze oefening ga je oefenen met window functions.
 -- Je maakt zelf een tabel aan. Die komt in dezelfde database als SalesLT en ecodrive, in het geheugen van je browser.
--- Ververs je de pagina, dan is de tabel weg: de CREATE TABLE hieronder opnieuw uitvoeren. Je tekst in het
--- werkblad blijft wel bewaard.
+-- Ververs je de pagina, dan is de tabel weg en moet je de statements hieronder opnieuw uitvoeren.
+-- Je tekst in het werkblad blijft wel bewaard.
 --
--- Opdracht 1a: maak de tabel student_score aan met de query hieronder.
+-- Opdracht 1a: maak de tabel student_score aan met de drie statements hieronder (CREATE TABLE, INSERT en SELECT).
+--              Draai ze één voor één (cursor erin, Ctrl+Enter), of selecteer alle drie en druk Ctrl+Enter.
 --
--- Opdracht 1b: schrijf een SELECT query met alle kolommen plus een kolom maximum_score en een kolom minimum_score
+-- Opdracht 1b: schrijf een SELECT-query met alle kolommen plus een kolom maximum_score en een kolom minimum_score
 --              met de hoogste en laagste score over alle rijen (tip: gebruik alleen OVER (), geen PARTITION BY).
 --
--- Opdracht 1c: schrijf een SELECT query met een kolom dep_maximum_score en dep_average_score:
---              de hoogste en de gemiddelde score per departement (tip: OVER (PARTITION BY ...)).
+-- Opdracht 1c: schrijf een SELECT-query met een kolom dep_maximum_score en dep_average_score:
+--              de hoogste en de gemiddelde score per departement (dep_name) (tip: OVER (PARTITION BY ...)).
 --
--- Opdracht 1d: schrijf een SELECT query met een kolom score_rank die de studenten rangschikt op score,
+-- Opdracht 1d: schrijf een SELECT-query met een kolom score_rank die de studenten rangschikt op score,
 --              per departement (tip: RANK() OVER (PARTITION BY ... ORDER BY ...)).
 --
 -- Opdracht 1e: gebruik DENSE_RANK in plaats van RANK in de query van 1d. Wat is het verschil in de output?
