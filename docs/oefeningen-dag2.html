@@ -40,7 +40,7 @@ nav.sub{font-size:13px;padding:10px 0}
     <li>Zet je cursor <b>in</b> één query en druk <b>Ctrl+Enter</b> (Mac: Cmd+Enter). Selecteer niet het hele bestand.</li>
   </ul>
 </div>
-<nav class="sub"><a href="#d2_oefening_1">1. Window functions</a> &middot; <a href="#d2_oefening_2">2. Running total en moving average</a> &middot; <a href="#d2_oefening_3">3. CASE WHEN en datatypes</a> &middot; <a href="#d2_oefening_4">4. Strings</a> &middot; <a href="#d2_oefening_5">5. Datum en tijd</a> &middot; <a href="#d2_oefening_6">6. Review drie LLM-queries</a> &middot; <a href="oefeningen-dag1.html">oefeningen dag 1</a></nav>
+<nav class="sub"><a href="#d2_oefening_1">1. Window functions</a> &middot; <a href="#d2_oefening_2">2. Running total en moving average</a> &middot; <a href="#d2_oefening_3">3. CASE WHEN en datatypes</a> &middot; <a href="#d2_oefening_4">4. Strings</a> &middot; <a href="#d2_oefening_5">5. Datum en tijd</a> &middot; <a href="oefeningen-dag1.html">oefeningen dag 1</a></nav>
 <section class="ex" id="d2_oefening_1">
   <div class="head"><h2>Window functions</h2><span class="file">d2_oefening_1.sql</span>
     <button class="btn" onclick="copyEl('pre-d2_oefening_1', this)">Kopieer</button></div>
@@ -230,61 +230,6 @@ VALUES (1, &#x27;Jan 2024&#x27;, 120.00)
     , (4, &#x27;Apr 2024&#x27;, 80.00)
     , (5, &#x27;Jun 2024&#x27;, 133.30)
     , (6, &#x27;Mei 2024&#x27;, 99.99);
-</pre></section><section class="ex" id="d2_oefening_6">
-  <div class="head"><h2>Review drie LLM-queries</h2><span class="file">d2_oefening_6.sql</span>
-    <button class="btn" onclick="copyEl('pre-d2_oefening_6', this)">Kopieer</button></div>
-  <pre id="pre-d2_oefening_6">-- ==========================================================================
--- d2_oefening_6 - Review drie LLM-queries
--- ==========================================================================
---
--- Drie queries die een LLM schreef. Per query (tweetallen, 15 minuten totaal):
---     1. Wat was de vraag? Zeg hem in je eigen woorden, inclusief de grain (&quot;1 rij per ...&quot;).
---     2. Wat gaat er mis? Gebruik de vijf patronen:
---          1 join fan-out · 2 aggregatie vóór/ná filter · 3 window-scoping · 4 datum &amp; tijd · 5 dialect-mix
---     3. Wat is de fix? Schrijf hem en controleer met een van de standaard checks.
---     Je mag een LLM laten reviewen. Vraag daarna: vond het model zijn eigen fout?
-
--------------------------------------------------------------------------
--- Query 1 · prompt was: &quot;Geef per klant (CustomerID) het aantal orders, de totale orderwaarde (TotalDue)
---                        en het aantal bestelde artikelen.&quot;
--------------------------------------------------------------------------
-SELECT C.CustomerID
-    , C.CompanyName
-    , COUNT(SOH.SalesOrderID) AS aantal_orders
-    , SUM(SOH.TotalDue) AS totale_orderwaarde
-    , SUM(SOD.OrderQty) AS aantal_artikelen
-FROM SalesLT.Customer AS C
-INNER JOIN SalesLT.SalesOrderHeader AS SOH ON SOH.CustomerID = C.CustomerID
-INNER JOIN SalesLT.SalesOrderDetail AS SOD ON SOD.SalesOrderID = SOH.SalesOrderID
-GROUP BY C.CustomerID
-    , C.CompanyName
-ORDER BY totale_orderwaarde DESC;
-
--------------------------------------------------------------------------
--- Query 2 · prompt was: &quot;Geef per orderregel het lopende totaal (running total) van de regelwaarde (LineTotal)
---                        binnen de order, in volgorde van SalesOrderDetailID.&quot;
--------------------------------------------------------------------------
-SELECT SOD.SalesOrderID
-    , SOD.SalesOrderDetailID
-    , SOD.LineTotal
-    , SUM(SOD.LineTotal) OVER (ORDER BY SOD.SalesOrderID) AS running_total
-FROM SalesLT.SalesOrderDetail AS SOD
-ORDER BY SOD.SalesOrderID
-    , SOD.SalesOrderDetailID;
-
--------------------------------------------------------------------------
--- Query 3 · prompt was: &quot;Geef de 10 orders uit 2008 van bedrijven met een korte naam (minder dan 15 tekens),
---                        met de bedrijfsnaam, de orderdatum en het aantal dagen tot verzending.&quot;
--------------------------------------------------------------------------
-SELECT TOP 10 SOH.SalesOrderID
-    , C.CompanyName
-    , SOH.OrderDate
-    , DATEDIFF(day, SOH.OrderDate, ISNULL(SOH.ShipDate, GETDATE())) AS dagen_tot_verzending
-FROM SalesLT.SalesOrderHeader AS SOH
-INNER JOIN SalesLT.Customer AS C ON C.CustomerID = SOH.CustomerID
-WHERE SOH.OrderDate BETWEEN &#x27;2008-01-01&#x27; AND &#x27;2008-12-31&#x27;
-    AND LEN(C.CompanyName) &lt; 15
-ORDER BY SOH.OrderDate;
 </pre></section></div><script>
 function copyEl(id, btn){const t=document.getElementById(id).innerText;
 navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Gekopieerd!';setTimeout(()=>btn.textContent=o,1500);});}
