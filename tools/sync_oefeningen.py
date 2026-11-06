@@ -6,7 +6,7 @@ Afgeleid (wordt door dit script overschreven):
   - het <script id="exdata"> blok in docs/werkblad.html
   - de <pre>-blokken in docs/oefeningen-dag{1,2}.html
   - de kopieen docs/files/dag{1,2}/werkblad.html (= docs/werkblad.html)
-  - docs/files/dag2/casus_murder_mystery.zip (ddl- en databestanden van de casus, zonder het .docx)
+  - docs/files/dag2/casus_murder_mystery.zip (ddl- en databestanden van de casus, zonder .docx en .pdf)
 
 Gebruik (vanuit de root van de repo):  python3 tools/sync_oefeningen.py
 """
@@ -68,12 +68,12 @@ def write_oefening_pages(items: list[dict]) -> None:
 
 
 def write_casus_zip() -> None:
-    """Zip de map casus_murder_mystery (zonder .docx), met vaste tijdstempels zodat de zip
+    """Zip de map casus_murder_mystery (zonder .docx en .pdf), met vaste tijdstempels zodat de zip
     alleen verandert als de inhoud verandert."""
     folder = FILES / "dag2" / "casus_murder_mystery"
     with zipfile.ZipFile(folder.with_suffix(".zip"), "w", zipfile.ZIP_DEFLATED) as zf:
         for p in sorted(folder.rglob("*")):
-            if p.is_file() and p.suffix != ".docx":
+            if p.is_file() and p.suffix not in (".docx", ".pdf"):
                 info = zipfile.ZipInfo(p.relative_to(folder.parent).as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
                 info.compress_type = zipfile.ZIP_DEFLATED
                 zf.writestr(info, p.read_bytes())
